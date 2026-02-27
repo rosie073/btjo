@@ -2,26 +2,30 @@ import React from "react";
 
 export default function TextField({
   label,
-  required,
+  required = false,
   type = "text",
   placeholder,
   value,
   onChange,
   name,
-  disabled,
+  autoComplete,
 }) {
   return (
     <div className="field">
-      <label className="label">
-        {label} {required && <span className="req">*</span>}
-      </label>
+      {label !== undefined && label !== null && label !== "" && (
+        <div className="label">
+          {label} {required && <span className="req">*</span>}
+        </div>
+      )}
+
       <input
         className="input"
         type={type}
-        placeholder={placeholder}
-        value={value}
         name={name}
-        disabled={disabled}
+        autoComplete={autoComplete}
+        required={required}
+        placeholder={placeholder}
+        value={value ?? ""}
         onChange={(e) => onChange?.(e.target.value)}
       />
     </div>

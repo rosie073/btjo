@@ -16,7 +16,9 @@ export default function ForgotReset() {
 
   function onReset(e) {
     e.preventDefault();
-    console.log("reset", { pw, confirm });
+    if (pw.length < 6) return alert("Password must be at least 6 characters.");
+    if (pw !== confirm) return alert("Passwords do not match.");
+    console.log("reset", { pw });
   }
 
   return (
