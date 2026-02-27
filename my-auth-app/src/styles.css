@@ -257,3 +257,10 @@ body{ margin:0; background:#fff; color:var(--text); }
   align-items:flex-start;
   justify-content:center;
 }
+
+.error {
+  color: red;
+  font-size: 12px;
+  margin-top: -8px;
+  margin-bottom: 8px;
+}

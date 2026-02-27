@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import AuthShell from "../ui/AuthShell.jsx";
 import TextField from "../ui/TextField.jsx";
-<img src="/logo.jpg" />
+import logo from "../assets/logo.jpg";
 
 export default function ForgotReset() {
   const [email, setEmail] = useState("");
@@ -24,7 +24,7 @@ export default function ForgotReset() {
   return (
     <AuthShell
       variant="center"
-      // logoSrc={logo}
+       logoSrc={logo} 
     >
       <div className="cardsRow">
         <div className="card cardSmall">

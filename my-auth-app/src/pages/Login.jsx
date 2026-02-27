@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import AuthShell from "../ui/AuthShell.jsx";
 import TextField from "../ui/TextField.jsx";
-<img src="/logo.jpg" />
+import logo from "../assets/logo.jpg";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -17,7 +17,7 @@ export default function Login() {
   return (
     <AuthShell
       variant="split"
-      // logoSrc={logo}
+      logoSrc={logo} 
       leftTitle="Welcome!"
       leftSubtitle="Documents Tracking System"
       leftDesc={
