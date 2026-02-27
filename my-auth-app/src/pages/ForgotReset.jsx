@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import AuthShell from "../ui/AuthShell.jsx";
 import TextField from "../ui/TextField.jsx";
-// import logo from "../assets/logo.png";
+<img src="/logo.jpg" />
 
 export default function ForgotReset() {
   const [email, setEmail] = useState("");
