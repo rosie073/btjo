@@ -1,0 +1,259 @@
+:root{
+  --blue:#6f8fd8;
+  --blue2:#8fb1ea;
+  --text:#1c1c1c;
+  --muted:#666;
+  --border:#d9d9d9;
+  --shadow: 0 8px 26px rgba(0,0,0,.12);
+  --radius: 26px;
+  --cardRadius: 10px;
+}
+
+*{ box-sizing:border-box; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+body{ margin:0; background:#fff; color:var(--text); }
+
+.page{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  overflow:hidden;
+}
+
+/* Blue background + circles (like your screenshots) */
+.bg{
+  position:absolute;
+  inset:0;
+  background: var(--blue);
+}
+.bg::before{
+  content:"";
+  position:absolute;
+  left:-120px;
+  top:-120px;
+  width:520px;
+  height:520px;
+  background: rgba(255,255,255,.12);
+  border-radius: 50%;
+}
+.bg::after{
+  content:"";
+  position:absolute;
+  left:90px;
+  bottom:-120px;
+  width:220px;
+  height:220px;
+  background: rgba(0,0,0,.06);
+  border-radius: 50%;
+}
+
+/* White rounded main frame */
+.frame{
+  position:relative;
+  width: min(1200px, 92vw);
+  height: min(640px, 86vh);
+  background:#fff;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow:hidden;
+  display:flex;
+}
+
+/* Top-right logo */
+.frameTopRight{
+  position:absolute;
+  top:18px;
+  right:22px;
+  z-index:3;
+}
+.seal{
+  width:44px;
+  height:44px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+}
+.sealImg{ width:100%; height:100%; object-fit:cover; }
+.sealPlaceholder{
+  width:100%;
+  height:100%;
+  border-radius:50%;
+  border:2px solid rgba(0,0,0,.25);
+  background: radial-gradient(circle at 30% 30%, rgba(0,0,0,.05), rgba(0,0,0,.02));
+}
+
+/* Split layout */
+.leftPanel{
+  width:50%;
+  position:relative;
+  background:transparent;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:40px;
+}
+.leftPanel::before{
+  content:"";
+  position:absolute;
+  left:-220px;
+  top:-120px;
+  width:760px;
+  height:760px;
+  background: var(--blue);
+  border-radius: 50%;
+}
+.leftPanelInner{
+  position:relative;
+  z-index:2;
+  color:#fff;
+  max-width:420px;
+}
+.leftPanelInner h1{
+  margin:0 0 10px;
+  font-size:44px;
+  font-weight:800;
+  letter-spacing:.2px;
+}
+.leftPanelInner h2{
+  margin:0 0 10px;
+  font-size:18px;
+  font-weight:700;
+}
+.leftPanelInner p{
+  margin:0;
+  font-size:13px;
+  line-height:1.45;
+  opacity:.95;
+}
+
+/* Right panel for forms */
+.rightPanel{
+  width:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:30px 50px;
+}
+
+/* Center variant (Forgot/Reset page) */
+.centerPanel{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:30px 50px;
+}
+
+/* Card */
+.card{
+  background:#fff;
+  border:1px solid rgba(0,0,0,.10);
+  border-radius: var(--cardRadius);
+  box-shadow: 0 6px 18px rgba(0,0,0,.08);
+  padding:22px 24px;
+}
+.cardWide{ width: 420px; }
+.cardSmall{ width: 360px; }
+
+.cardTitle{
+  margin:0 0 14px;
+  text-align:center;
+  font-size:22px;
+  font-weight:800;
+  letter-spacing:.6px;
+}
+
+.form{ display:flex; flex-direction:column; gap:12px; }
+
+.field{ display:flex; flex-direction:column; gap:6px; }
+.label{
+  font-size:12px;
+  color:#2b2b2b;
+  font-weight:700;
+}
+.req{ color:#d11; }
+
+.input{
+  height:38px;
+  border:1px solid var(--border);
+  border-radius: 6px;
+  padding: 0 12px;
+  outline:none;
+}
+.input:focus{ border-color: rgba(111,143,216,.95); box-shadow: 0 0 0 3px rgba(111,143,216,.18); }
+
+.btn{
+  height:40px;
+  border:none;
+  border-radius:6px;
+  background: var(--blue2);
+  color:#0f1c3a;
+  font-weight:800;
+  cursor:pointer;
+}
+.btn:hover{ filter: brightness(.98); }
+.btn:active{ transform: translateY(1px); }
+
+.btnOutline{
+  height:40px;
+  border-radius:6px;
+  background:#fff;
+  border:1px solid rgba(0,0,0,.25);
+  cursor:pointer;
+  font-weight:700;
+}
+
+.rowRight{ display:flex; justify-content:flex-end; margin-top:-6px; }
+.link{
+  color:#3a66d6;
+  text-decoration:none;
+  font-size:12px;
+  font-weight:700;
+}
+.link:hover{ text-decoration:underline; }
+
+.mutedCenter{
+  text-align:center;
+  font-size:12px;
+  color:var(--muted);
+}
+.divider{
+  height:1px;
+  background: rgba(0,0,0,.10);
+  margin: 8px 0 2px;
+}
+
+.orRow{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top: 6px;
+}
+.orLine{ height:1px; flex:1; background: rgba(0,0,0,.14); }
+.orText{ font-size:12px; color:var(--muted); }
+
+.googleBtn{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+}
+.gIcon{
+  width:18px;
+  height:18px;
+  border-radius:4px;
+  display:grid;
+  place-items:center;
+  font-weight:900;
+  border:1px solid rgba(0,0,0,.25);
+}
+
+/* Forgot/Reset two cards */
+.cardsRow{
+  display:flex;
+  gap:34px;
+  align-items:flex-start;
+  justify-content:center;
+}
