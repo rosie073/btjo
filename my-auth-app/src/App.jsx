@@ -9,12 +9,17 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* default */}
         <Route path="/" element={<Navigate to="/login" replace />} />
+
+        {/* pages */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot" element={<ForgotReset />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+
+        {/* 404 */}
         <Route path="*" element={<Navigate to="/login" replace />} />
-        <Route path="*" element={<Navigate to="/Dashboard"/>} />
       </Routes>
     </BrowserRouter>
   );
