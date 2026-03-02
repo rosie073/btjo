@@ -264,3 +264,39 @@ body{ margin:0; background:#fff; color:var(--text); }
   margin-top: -8px;
   margin-bottom: 8px;
 }
+
+
+
+
+/* Center wrapper */
+.googleWrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 15px;
+}
+
+/* Google button */
+.googleBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 300px;
+  padding: 10px;
+  font-weight: 500;
+  background: #fff;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.googleBtn:hover {
+  background: #f5f5f5;
+}
+
+/* Google logo */
+.googleIcon {
+  width: 18px;
+  height: 18px;
+}

@@ -1,10 +1,19 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import AuthShell from "../ui/AuthShell.jsx";
 import TextField from "../ui/TextField.jsx";
 import logo from "../assets/logo.jpg";
 
+import {
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+} from "firebase/auth";
+import { auth, googleProvider } from "../firebase";
+
 export default function Signup() {
+  const navigate = useNavigate();
+
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -14,20 +23,93 @@ export default function Signup() {
     confirm: "",
   });
 
-  function set(k, v) {
+  function setField(k, v) {
     setForm((p) => ({ ...p, [k]: v }));
   }
+
+  // ✅ If we used redirect login, this will catch the result after redirect back
+  useEffect(() => {
+    getRedirectResult(auth)
+      .then((result) => {
+        if (!result?.user) return;
+
+        const user = result.user;
+        console.log("Google Redirect User:", user);
+
+        setForm((p) => ({
+          ...p,
+          firstName: user.displayName?.split(" ")[0] || "",
+          lastName: user.displayName?.split(" ").slice(1).join(" ") || "",
+          email: user.email || "",
+        }));
+
+        // OPTIONAL redirect
+        // navigate("/dashboard");
+      })
+      .catch((error) => {
+        // If there's no redirect result, Firebase may throw "auth/no-auth-event" sometimes.
+        // We can ignore those, but show real errors.
+        if (
+          error?.code &&
+          !["auth/no-auth-event", "auth/cancelled-popup-request"].includes(
+            error.code
+          )
+        ) {
+          console.error("Redirect Result Error:", error);
+        }
+      });
+  }, [navigate]);
 
   function onSubmit(e) {
     e.preventDefault();
 
-    // Just let browser validate automatically
     if (!e.currentTarget.checkValidity()) {
       e.currentTarget.reportValidity();
       return;
     }
 
-    console.log("signup", form);
+    if (form.password !== form.confirm) {
+      alert("Passwords do not match!");
+      return;
+    }
+
+    console.log("Manual signup:", form);
+    // TODO: connect to backend
+  }
+
+  // ✅ GOOGLE SIGNUP: try popup; if blocked/fails, fallback to redirect
+  async function handleGoogleSignup() {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+
+      console.log("Google Popup User:", {
+        uid: user.uid,
+        name: user.displayName,
+        email: user.email,
+        photo: user.photoURL,
+      });
+
+      setForm((p) => ({
+        ...p,
+        firstName: user.displayName?.split(" ")[0] || "",
+        lastName: user.displayName?.split(" ").slice(1).join(" ") || "",
+        email: user.email || "",
+      }));
+
+      // OPTIONAL redirect
+      // navigate("/dashboard");
+    } catch (error) {
+      console.error("Popup failed, trying redirect:", error);
+
+      // If popup failed (popup blocked / network issue), use redirect login
+      try {
+        await signInWithRedirect(auth, googleProvider);
+      } catch (err2) {
+        console.error("Redirect also failed:", err2);
+        alert(err2?.message || "Google sign-in failed.");
+      }
+    }
   }
 
   return (
@@ -41,13 +123,12 @@ export default function Signup() {
       <div className="card cardWide">
         <h3 className="cardTitle">SIGN UP</h3>
 
-        {/* IMPORTANT: no noValidate here */}
         <form onSubmit={onSubmit} className="form">
           <TextField
             name="firstName"
             placeholder="First Name"
             value={form.firstName}
-            onChange={(v) => set("firstName", v)}
+            onChange={(v) => setField("firstName", v)}
             required
           />
 
@@ -55,7 +136,7 @@ export default function Signup() {
             name="lastName"
             placeholder="Last Name"
             value={form.lastName}
-            onChange={(v) => set("lastName", v)}
+            onChange={(v) => setField("lastName", v)}
             required
           />
 
@@ -64,7 +145,7 @@ export default function Signup() {
             type="email"
             placeholder="Email"
             value={form.email}
-            onChange={(v) => set("email", v)}
+            onChange={(v) => setField("email", v)}
             required
           />
 
@@ -73,7 +154,7 @@ export default function Signup() {
             type="tel"
             placeholder="Number"
             value={form.number}
-            onChange={(v) => set("number", v)}
+            onChange={(v) => setField("number", v)}
             required
           />
 
@@ -82,7 +163,7 @@ export default function Signup() {
             type="password"
             placeholder="Password"
             value={form.password}
-            onChange={(v) => set("password", v)}
+            onChange={(v) => setField("password", v)}
             required
             minLength={8}
           />
@@ -92,7 +173,7 @@ export default function Signup() {
             type="password"
             placeholder="Confirm Password"
             value={form.confirm}
-            onChange={(v) => set("confirm", v)}
+            onChange={(v) => setField("confirm", v)}
             required
           />
 
@@ -108,31 +189,26 @@ export default function Signup() {
           </div>
         </form>
 
+        <div className="orRow">
+          <span className="orLine" />
+          <span className="orText">or</span>
+          <span className="orLine" />
+        </div>
 
-          <div className="orRow">
-            <span className="orLine" />
-            <span className="orText">or</span>
-            <span className="orLine" />
-          </div>
-
+        <div className="googleWrapper">
           <button
             type="button"
             className="btnOutline googleBtn"
-            onClick={() => console.log("google sign in")}
+            onClick={handleGoogleSignup}
           >
-            <span className="gIcon">G</span>
-            Sign up with Google
+            <img
+              src="https://developers.google.com/identity/images/g-logo.png"
+              alt="Google"
+              className="googleIcon"
+            />
+            <span>Sign up with Google</span>
           </button>
-
-
-
-
-
-
-
-
-
-
+        </div>
       </div>
     </AuthShell>
   );
