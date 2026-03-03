@@ -300,3 +300,101 @@ body{ margin:0; background:#fff; color:var(--text); }
   width: 18px;
   height: 18px;
 }
+
+
+/* Scroll inside card (so it fits) */
+.cardWide {
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+.cardBodyScroll {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+/* Password eye button */
+.pwWrap { position: relative; display: flex; align-items: center; }
+.pwInput { padding-right: 44px; }
+.pwToggle {
+  position: absolute;
+  right: 10px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+}
+.pwToggle:hover { background: rgba(0,0,0,0.06); }
+
+/* Error/help */
+.helpText { margin-top: 6px; font-size: 12px; opacity: 0.85; }
+.helpError { opacity: 1; color: #c62828; }
+
+/* Screenshot-style password meter */
+.pwMeter { margin-top: 8px; margin-bottom: 8px; }
+.pwBar {
+  height: 6px;
+  background: rgba(0,0,0,0.12);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.pwFill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.2s ease;
+}
+.pwFill.weak { background: #d32f2f; }
+.pwFill.medium { background: #f59e0b; }
+.pwFill.good { background: #22c55e; }
+.pwFill.strong { background: #16a34a; }
+
+.pwStatus { margin-top: 10px; font-size: 13px; color: #333; }
+.pwStatus.muted { opacity: 0.7; }
+
+.pwRules {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  display: grid;
+  gap: 6px;
+}
+.pwRules li { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.pwRules li.ok { color: #16a34a; }
+.pwRules li.bad { color: #9ca3af; }
+
+.pwIcon {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+
+
+
+
+.notice{
+  margin: 10px 0 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  border: 1px solid rgba(0,0,0,0.12);
+  background: rgba(0,0,0,0.04);
+}
+
+.notice {
+  border: 1px solid transparent;
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+
+.notice.info {
+  border-color: rgba(0, 90, 200, 0.25);
+}
+
+.notice.success { border-color: rgba(0,128,0,0.25); }
+.notice.error   { border-color: rgba(200,0,0,0.25); }
