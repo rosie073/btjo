@@ -4,26 +4,23 @@ import AuthShell from "../ui/AuthShell.jsx";
 import TextField from "../ui/TextField.jsx";
 import logo from "../assets/logo.jpg";
 
+import { auth, googleProvider, db } from "../firebase";
 import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
   signOut,
-} from "firebase/auth";
-
-
-import {
   signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
 } from "firebase/auth";
-import { auth, googleProvider } from "../firebase";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 
 /** Password rules:
  * - min 8 chars
  * - at least 1 uppercase
  * - at least 1 lowercase
  * - at least 1 number
- * - at least 1 special character (to match your screenshot)
+ * - at least 1 special character
  */
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 
@@ -63,57 +60,49 @@ function PasswordField({
           title={show ? "Hide" : "Show"}
         >
           {show ? (
-  // ✅ eye (password visible)
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <path
-      d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M12 15a3 3 0 100-6 3 3 0 000 6z"
-      stroke="currentColor"
-      strokeWidth="2"
-    />
-  </svg>
-) : (
-  // ✅ eye-off (password hidden)
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <path
-      d="M3 3l18 18"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-    />
-    <path
-      d="M10.6 10.6A3 3 0 0013.4 13.4"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-    />
-    <path
-      d="M9.9 5.2A10.7 10.7 0 0112 5c6.5 0 10 7 10 7a18.6 18.6 0 01-4.2 5.1"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-    />
-    <path
-      d="M6.3 6.3C3.7 8.2 2 12 2 12s3.5 7 10 7c1 0 2-.2 2.9-.5"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-    />
-  </svg>
-)}
-          
+            // eye
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M12 15a3 3 0 100-6 3 3 0 000 6z"
+                stroke="currentColor"
+                strokeWidth="2"
+              />
+            </svg>
+          ) : (
+            // eye-off
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M3 3l18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <path
+                d="M10.6 10.6A3 3 0 0013.4 13.4"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+              <path
+                d="M9.9 5.2A10.7 10.7 0 0112 5c6.5 0 10 7 10 7a18.6 18.6 0 01-4.2 5.1"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+              <path
+                d="M6.3 6.3C3.7 8.2 2 12 2 12s3.5 7 10 7c1 0 2-.2 2.9-.5"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
+          )}
         </button>
       </div>
 
       {(error || helper) && (
-        <div className={`helpText ${error ? "helpError" : ""}`}>
-          {error || helper}
-        </div>
+        <div className={`helpText ${error ? "helpError" : ""}`}>{error || helper}</div>
       )}
     </div>
   );
@@ -167,15 +156,8 @@ export default function Signup() {
     setForm((p) => ({ ...p, [k]: v }));
   }
 
-  // ✅ rules + strength (for bar + label)
   const rules = useMemo(() => getPasswordRules(form.password), [form.password]);
   const strength = useMemo(() => getStrengthFromRules(rules), [rules]);
-
-  const passwordLiveError = useMemo(() => {
-    if (!form.password) return "";
-    if (passwordRegex.test(form.password)) return "";
-   
-  }, [form.password]);
 
   const confirmLiveError = useMemo(() => {
     if (!form.confirm) return "";
@@ -183,11 +165,28 @@ export default function Signup() {
     return "Passwords do not match.";
   }, [form.password, form.confirm]);
 
+  // If Google redirect flow happens, you can store here too
   useEffect(() => {
     getRedirectResult(auth)
-      .then((result) => {
+      .then(async (result) => {
         if (!result?.user) return;
         const user = result.user;
+
+        // Save profile to Firestore (merge so it won't overwrite existing fields)
+        await setDoc(
+          doc(db, "users", user.uid),
+          {
+            uid: user.uid,
+            firstName: user.displayName?.split(" ")[0] || "",
+            lastName: user.displayName?.split(" ").slice(1).join(" ") || "",
+            email: user.email || "",
+            provider: "google",
+            emailVerified: user.emailVerified,
+            updatedAt: serverTimestamp(),
+            createdAt: serverTimestamp(),
+          },
+          { merge: true }
+        );
 
         setForm((p) => ({
           ...p,
@@ -195,6 +194,9 @@ export default function Signup() {
           lastName: user.displayName?.split(" ").slice(1).join(" ") || "",
           email: user.email || "",
         }));
+
+        if (user.emailVerified) navigate("/dashboard");
+        else alert("Please verify your email first before continuing.");
       })
       .catch((error) => {
         if (
@@ -206,11 +208,17 @@ export default function Signup() {
       });
   }, [navigate]);
 
-  function onSubmit(e) {
+  // ✅ EMAIL/PASSWORD SIGNUP + FIRESTORE SAVE
+  async function onSubmit(e) {
     e.preventDefault();
 
     if (!e.currentTarget.checkValidity()) {
       e.currentTarget.reportValidity();
+      return;
+    }
+
+    if (!passwordRegex.test(form.password)) {
+      alert("Password must meet all requirements.");
       return;
     }
 
@@ -219,90 +227,77 @@ export default function Signup() {
       return;
     }
 
-    console.log("Manual signup:", form);
-  }
-
-async function handleGoogleSignup() {
-  try {
-    const result = await signInWithPopup(auth, googleProvider);
-    const user = result.user;
-
-    // Fill form
-    setForm((p) => ({
-      ...p,
-      firstName: user.displayName?.split(" ")[0] || "",
-      lastName: user.displayName?.split(" ").slice(1).join(" ") || "",
-      email: user.email || "",
-    }));
-
-    // ✅ Only redirect if verified
-    if (user.emailVerified) {
-      navigate("/dashboard");
-    } else {
-      alert("Please verify your email first before continuing.");
-    }
-  } catch (error) {
-    console.error("Popup failed, trying redirect:", error);
     try {
-      await signInWithRedirect(auth, googleProvider);
-    } catch (err2) {
-      console.error("Redirect also failed:", err2);
-      alert(err2?.message || "Google sign-in failed.");
+      const cred = await createUserWithEmailAndPassword(auth, form.email, form.password);
+
+      // Save profile (NO password!)
+      await setDoc(doc(db, "users", cred.user.uid), {
+        uid: cred.user.uid,
+        firstName: form.firstName,
+        lastName: form.lastName,
+        email: form.email,
+        number: form.number,
+        provider: "password",
+        emailVerified: cred.user.emailVerified,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+
+      await sendEmailVerification(cred.user);
+      await signOut(auth);
+
+      alert("We sent a verification link to your email. Please verify your email, then login again.");
+      navigate("/login");
+    } catch (err) {
+      console.error("Signup error:", err);
+      alert(err?.message || "Signup failed.");
     }
   }
-}
 
-async function onSubmit(e) {
-  e.preventDefault();
+  // ✅ GOOGLE SIGNUP + FIRESTORE SAVE
+  async function handleGoogleSignup() {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
 
-  if (!e.currentTarget.checkValidity()) {
-    e.currentTarget.reportValidity();
-    return;
+      await setDoc(
+        doc(db, "users", user.uid),
+        {
+          uid: user.uid,
+          firstName: user.displayName?.split(" ")[0] || "",
+          lastName: user.displayName?.split(" ").slice(1).join(" ") || "",
+          email: user.email || "",
+          number: form.number || "",
+          provider: "google",
+          emailVerified: user.emailVerified,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      setForm((p) => ({
+        ...p,
+        firstName: user.displayName?.split(" ")[0] || "",
+        lastName: user.displayName?.split(" ").slice(1).join(" ") || "",
+        email: user.email || "",
+      }));
+
+      if (user.emailVerified) {
+        navigate("/dashboard");
+      } else {
+        alert("Please verify your email first before continuing.");
+      }
+    } catch (error) {
+      console.error("Popup failed, trying redirect:", error);
+      try {
+        await signInWithRedirect(auth, googleProvider);
+      } catch (err2) {
+        console.error("Redirect also failed:", err2);
+        alert(err2?.message || "Google sign-in failed.");
+      }
+    }
   }
-
-  if (!passwordRegex.test(form.password)) {
-    alert("Password must meet all requirements.");
-    return;
-  }
-
-  if (form.password !== form.confirm) {
-    alert("Passwords do not match!");
-    return;
-  }
-
-  try {
-    // ✅ Create user
-    const cred = await createUserWithEmailAndPassword(
-      auth,
-      form.email,
-      form.password
-    );
-
-    // ✅ Send verification email
-    await sendEmailVerification(cred.user);
-
-    // ✅ Force user to verify first
-    await signOut(auth);
-
-    alert(
-      "We sent a verification link to your email. Please verify your email, then login again."
-    );
-
-    // Optional: go to login page
-    navigate("/login");
-  } catch (err) {
-    console.error(err);
-    alert(err?.message || "Signup failed.");
-  }
-}
-
-
-
-
-
-
-
-
 
   return (
     <AuthShell
@@ -359,16 +354,11 @@ async function onSubmit(e) {
               show={showPw}
               onToggleShow={() => setShowPw((s) => !s)}
               autoComplete="new-password"
-              error={passwordLiveError}
             />
 
-            {/* ✅ Screenshot-style meter + checklist */}
             <div className="pwMeter">
               <div className="pwBar">
-                <div
-                  className={`pwFill ${strength.tone}`}
-                  style={{ width: `${strength.percent}%` }}
-                />
+                <div className={`pwFill ${strength.tone}`} style={{ width: `${strength.percent}%` }} />
               </div>
 
               {form.password ? (
@@ -421,11 +411,7 @@ async function onSubmit(e) {
           </div>
 
           <div className="googleWrapper">
-            <button
-              type="button"
-              className="btnOutline googleBtn"
-              onClick={handleGoogleSignup}
-            >
+            <button type="button" className="btnOutline googleBtn" onClick={handleGoogleSignup}>
               <img
                 src="https://developers.google.com/identity/images/g-logo.png"
                 alt="Google"
