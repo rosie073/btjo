@@ -11,6 +11,9 @@ import menuIcon from "../assets/menu.png";
 function Dashboard() {
   const [showAddDocs, setShowAddDocs] = useState(false);
 
+  // ✅ NEW: right sidebar open/close
+  const [navOpen, setNavOpen] = useState(false);
+
   const stats = [
     { label: "Total Documents", value: 211, className: "blue", icon: "📄" },
     { label: "In Progress", value: 56, className: "green", icon: "✳️" },
@@ -124,6 +127,11 @@ function Dashboard() {
     { label: "Approved by Budget Office", date: "02/10/2026", type: "ok" },
   ];
 
+  function onSignOut() {
+    // put your real signout here later (firebase signOut(auth), etc)
+    alert("Sign out clicked");
+  }
+
   return (
     <div className="page">
       <div className="app-shell">
@@ -134,20 +142,29 @@ function Dashboard() {
             <div className="topbar-title">Municipal Documents Dashboard</div>
           </div>
 
-          <div className="topbar-right">
-            <button className="icon-btn" aria-label="Notifications">
-              <img src={bell} alt="bell" />
-            </button>
-            <button className="icon-btn" aria-label="User">
-              <img src={userIcon} alt="user" />
-            </button>
-            <button className="icon-btn" aria-label="Close">
-              <img src={closeIcon} alt="close" />
-            </button>
-            <button className="icon-btn" aria-label="Menu">
-              <img src={menuIcon} alt="menu" />
-            </button>
-          </div>
+        <div className="topbar-right">
+          <button className="icon-btn" aria-label="Notifications" type="button">
+            <img src={bell} alt="" />
+          </button>
+
+          <button className="icon-btn" aria-label="User" type="button">
+            <img src={userIcon} alt="" />
+          </button>
+
+          <button className="icon-btn" aria-label="Close" type="button">
+            <img src={closeIcon} alt="" />
+          </button>
+
+          {/* ✅ Menu toggles sidebar (open/close) */}
+          <button
+            className="icon-btn icon-btn--menu"
+            aria-label="Open menu"
+            type="button"
+            onClick={() => setNavOpen((v) => !v)}
+          >
+            <img src={menuIcon} alt="" />
+          </button>
+        </div>
         </header>
 
         {/* Stats strip */}
@@ -231,7 +248,6 @@ function Dashboard() {
 
           {/* Bottom layout */}
           <section className="bottom-grid">
-            {/* Left: Department Status */}
             <div className="card">
               <div className="card-title">Department Status</div>
 
@@ -257,7 +273,7 @@ function Dashboard() {
                 ))}
               </div>
 
-              <div className="mini-chart">
+           {/*}   <div className="mini-chart">
                 <div className="mini-chart-title">Avg. Processing Time</div>
                 <div className="mini-bars">
                   <div className="bar b1" />
@@ -273,10 +289,9 @@ function Dashboard() {
                   <span>Finance</span>
                   <span>Admin</span>
                 </div>
-              </div>
+              </div> */}
             </div>
 
-            {/* Middle: Document History */}
             <div className="card">
               <div className="card-title center-title">Document History</div>
 
@@ -296,7 +311,6 @@ function Dashboard() {
               </div>
             </div>
 
-            {/* Right: Button */}
             <div className="button-col">
               <button className="add-docs" onClick={() => setShowAddDocs(true)}>
                 ADD DOCUMENTS
@@ -306,7 +320,51 @@ function Dashboard() {
         </main>
       </div>
 
-      {/* ===== ONLY ADDITION: MODAL ALERT FOR ADD DOCUMENTS ===== */}
+      {/* ✅ NEW: RIGHT SIDEBAR NAV */}
+      {navOpen && (
+        <div className="nav-overlay" onClick={() => setNavOpen(false)}>
+          <aside className="right-nav" onClick={(e) => e.stopPropagation()}>
+            <button className="nav-close" onClick={() => setNavOpen(false)}>
+              ✕
+            </button>
+
+            <nav className="nav-list">
+              <button className="nav-item active">
+                <span className="nav-ico">▦</span> Dashboard
+              </button>
+              <button className="nav-item">
+                <span className="nav-ico">📄</span> Documents
+              </button>
+              <button className="nav-item">
+                <span className="nav-ico">📍</span> Tracking
+              </button>
+              <button className="nav-item">
+                <span className="nav-ico">🔔</span> Notification
+              </button>
+              <button className="nav-item">
+                <span className="nav-ico">🏢</span> Departments
+              </button>
+              <button className="nav-item">
+                <span className="nav-ico">📊</span> Reports &amp; Analytics
+              </button>
+              <button className="nav-item">
+                <span className="nav-ico">⚙️</span> Settings
+              </button>
+              <button className="nav-item">
+                <span className="nav-ico">❓</span> Help
+              </button>
+            </nav>
+
+            <div className="nav-footer">
+              <button className="nav-signout" onClick={onSignOut}>
+                ↩ Sign out
+              </button>
+            </div>
+          </aside>
+        </div>
+      )}
+
+      {/* ADD DOCUMENTS MODAL */}
       {showAddDocs && (
         <div className="adddocs-overlay" onClick={() => setShowAddDocs(false)}>
           <div className="adddocs-modal" onClick={(e) => e.stopPropagation()}>
@@ -315,7 +373,10 @@ function Dashboard() {
 
               <div className="adddocs-top-actions">
                 <button className="adddocs-draft">Save Draft</button>
-                <button className="adddocs-x" onClick={() => setShowAddDocs(false)}>
+                <button
+                  className="adddocs-x"
+                  onClick={() => setShowAddDocs(false)}
+                >
                   ✕
                 </button>
               </div>
@@ -364,7 +425,10 @@ function Dashboard() {
 
                 <div className="adddocs-right">
                   <button className="adddocs-save">Save</button>
-                  <button className="adddocs-cancel" onClick={() => setShowAddDocs(false)}>
+                  <button
+                    className="adddocs-cancel"
+                    onClick={() => setShowAddDocs(false)}
+                  >
                     Cancel
                   </button>
                 </div>
@@ -373,7 +437,6 @@ function Dashboard() {
           </div>
         </div>
       )}
-      {/* ===== END MODAL ===== */}
     </div>
   );
 }
