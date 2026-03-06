@@ -1,26 +1,93 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import "../ui/Dashboard.css";
+import { useNavigate } from "react-router-dom";
 
 // images (src/assets/)
 import seal from "../assets/logo.jpg";
-import bell from "../assets/image.png";
-import userIcon from "../assets/user-3.png";
-import closeIcon from "../assets/close.png";
-import menuIcon from "../assets/menu.png";
+
+// lucide icons
+import {
+  Bell,
+  User,
+  X,
+  Menu,
+  Search,
+  ChevronDown,
+  Upload,
+  FolderOpen,
+  CalendarDays,
+  FileText,
+  ClipboardList,
+  CheckSquare,
+  Clock3,
+  Siren,
+  TriangleAlert,
+  LayoutDashboard,
+  Files,
+  MapPinned,
+  Building2,
+  BarChart3,
+  Settings,
+  CircleHelp,
+  LogOut,
+  Shield,
+  Wrench,
+  Landmark,
+} from "lucide-react";
 
 function Dashboard() {
   const [showAddDocs, setShowAddDocs] = useState(false);
-
-  // ✅ NEW: right sidebar open/close
   const [navOpen, setNavOpen] = useState(false);
+  const dateInputRef = useRef(null);
+  const navigate = useNavigate();
+
+  const [docForm, setDocForm] = useState({
+    search: "",
+    documentType: "",
+    applicationName: "",
+    originDepartment: "",
+    priorityLabel: "Priority",
+    priorityLevel: "Normal",
+    date: new Date().toISOString().split("T")[0],
+  });
 
   const stats = [
-    { label: "Total Documents", value: 211, className: "blue", icon: "📄" },
-    { label: "In Progress", value: 56, className: "green", icon: "✳️" },
-    { label: "Completed", value: 81, className: "mint", icon: "🧾" },
-    { label: "Overdue", value: 25, className: "amber", icon: "🕒" },
-    { label: "Urgent", value: 10, className: "red", icon: "🧯" },
-    { label: "Alert", value: 4, className: "navy", icon: "⚠️" },
+    {
+      label: "Total Documents",
+      value: 211,
+      className: "blue",
+      icon: <FileText size={15} strokeWidth={2.2} />,
+    },
+    {
+      label: "In Progress",
+      value: 56,
+      className: "green",
+      icon: <ClipboardList size={15} strokeWidth={2.2} />,
+    },
+    {
+      label: "Completed",
+      value: 81,
+      className: "mint",
+      icon: <CheckSquare size={15} strokeWidth={2.2} />,
+    },
+    {
+      label: "Overdue",
+      value: 25,
+      className: "amber",
+      icon: <Clock3 size={15} strokeWidth={2.2} />,
+    },
+    {
+      label: "Urgent",
+      value: 10,
+      className: "red",
+      icon: <Siren size={15} strokeWidth={2.2} />,
+    },
+    {
+      label: "Alert",
+      value: 4,
+      className: "navy",
+      icon: <TriangleAlert size={15} strokeWidth={2.2} />,
+    },
   ];
 
   const documents = [
@@ -95,7 +162,7 @@ function Dashboard() {
         { label: "Overdue", value: 3 },
       ],
       tone: "green",
-      icon: "⚙️",
+      icon: <Shield size={16} strokeWidth={2.2} />,
     },
     {
       title: "Engineering",
@@ -105,7 +172,7 @@ function Dashboard() {
         { label: "Overdue", value: 2 },
       ],
       tone: "mint",
-      icon: "🧩",
+      icon: <Wrench size={16} strokeWidth={2.2} />,
     },
     {
       title: "Mayor's Office",
@@ -115,7 +182,7 @@ function Dashboard() {
         { label: "Completed", value: 2 },
       ],
       tone: "blue",
-      icon: "🏛️",
+      icon: <Landmark size={16} strokeWidth={2.2} />,
     },
   ];
 
@@ -128,46 +195,51 @@ function Dashboard() {
   ];
 
   function onSignOut() {
-    // put your real signout here later (firebase signOut(auth), etc)
     alert("Sign out clicked");
+  }
+
+  function handleDocChange(key, value) {
+    setDocForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function handleSaveDoc() {
+    console.log("Saved document:", docForm);
+    setShowAddDocs(false);
   }
 
   return (
     <div className="page">
       <div className="app-shell">
-        {/* Header with images */}
         <header className="topbar">
           <div className="topbar-left">
             <img className="seal" src={seal} alt="Seal" />
             <div className="topbar-title">Municipal Documents Dashboard</div>
           </div>
 
-        <div className="topbar-right">
-          <button className="icon-btn" aria-label="Notifications" type="button">
-            <img src={bell} alt="" />
-          </button>
+          <div className="topbar-right">
+            <button className="icon-btn" aria-label="Notifications" type="button">
+              <Bell size={18} strokeWidth={2.2} />
+            </button>
 
-          <button className="icon-btn" aria-label="User" type="button">
-            <img src={userIcon} alt="" />
-          </button>
+            <button className="icon-btn" aria-label="User" type="button">
+              <User size={18} strokeWidth={2.2} />
+            </button>
 
-          <button className="icon-btn" aria-label="Close" type="button">
-            <img src={closeIcon} alt="" />
-          </button>
+            <button className="icon-btn" aria-label="Close" type="button">
+              <X size={18} strokeWidth={2.2} />
+            </button>
 
-          {/* ✅ Menu toggles sidebar (open/close) */}
-          <button
-            className="icon-btn icon-btn--menu"
-            aria-label="Open menu"
-            type="button"
-            onClick={() => setNavOpen((v) => !v)}
-          >
-            <img src={menuIcon} alt="" />
-          </button>
-        </div>
+            <button
+              className="icon-btn icon-btn--menu"
+              aria-label="Open menu"
+              type="button"
+              onClick={() => setNavOpen((v) => !v)}
+            >
+              <Menu size={18} strokeWidth={2.2} />
+            </button>
+          </div>
         </header>
 
-        {/* Stats strip */}
         <section className="stats-strip">
           {stats.map((s) => (
             <div key={s.label} className={`stat-block ${s.className}`}>
@@ -180,7 +252,6 @@ function Dashboard() {
           ))}
         </section>
 
-        {/* Main card */}
         <main className="main-card">
           <div className="section-head">
             <h3 className="section-title">Document Tracking</h3>
@@ -188,7 +259,9 @@ function Dashboard() {
             <div className="filters">
               <div className="search-wrap">
                 <input className="search" placeholder="Search Document..." />
-                <span className="search-icon">🔍</span>
+                <span className="search-icon">
+                  <Search size={14} strokeWidth={2.2} />
+                </span>
               </div>
 
               <select className="select">
@@ -201,8 +274,8 @@ function Dashboard() {
                 <option>Date Range</option>
               </select>
 
-              <button className="filter-btn" aria-label="Search">
-                🔍
+              <button className="filter-btn" aria-label="Search" type="button">
+                <Search size={14} strokeWidth={2.2} />
               </button>
             </div>
           </div>
@@ -246,7 +319,6 @@ function Dashboard() {
             </table>
           </div>
 
-          {/* Bottom layout */}
           <section className="bottom-grid">
             <div className="card">
               <div className="card-title">Department Status</div>
@@ -272,24 +344,6 @@ function Dashboard() {
                   </div>
                 ))}
               </div>
-
-           {/*}   <div className="mini-chart">
-                <div className="mini-chart-title">Avg. Processing Time</div>
-                <div className="mini-bars">
-                  <div className="bar b1" />
-                  <div className="bar b2" />
-                  <div className="bar b3" />
-                  <div className="bar b4" />
-                  <div className="bar b5" />
-                </div>
-                <div className="mini-x">
-                  <span>Planning</span>
-                  <span>Engineering</span>
-                  <span>Mayor</span>
-                  <span>Finance</span>
-                  <span>Admin</span>
-                </div>
-              </div> */}
             </div>
 
             <div className="card">
@@ -320,111 +374,236 @@ function Dashboard() {
         </main>
       </div>
 
-      {/* ✅ NEW: RIGHT SIDEBAR NAV */}
       {navOpen && (
         <div className="nav-overlay" onClick={() => setNavOpen(false)}>
           <aside className="right-nav" onClick={(e) => e.stopPropagation()}>
             <button className="nav-close" onClick={() => setNavOpen(false)}>
-              ✕
+              <X size={18} strokeWidth={2.2} />
             </button>
 
             <nav className="nav-list">
               <button className="nav-item active">
-                <span className="nav-ico">▦</span> Dashboard
+                <span className="nav-ico">
+                  <LayoutDashboard size={16} strokeWidth={2.2} />
+                </span>
+                Dashboard
               </button>
-              <button className="nav-item">
-                <span className="nav-ico">📄</span> Documents
+
+              <button className="nav-item" onClick={() => navigate("/documents")}>
+                <span className="nav-ico">
+                  <Files size={16} strokeWidth={2.2} />
+                </span>
+                Documents
               </button>
+
+
+              
+
               <button className="nav-item">
-                <span className="nav-ico">📍</span> Tracking
+                <span className="nav-ico">
+                  <MapPinned size={16} strokeWidth={2.2} />
+                </span>
+                Tracking
               </button>
+
               <button className="nav-item">
-                <span className="nav-ico">🔔</span> Notification
+                <span className="nav-ico">
+                  <Bell size={16} strokeWidth={2.2} />
+                </span>
+                Notification
               </button>
+
               <button className="nav-item">
-                <span className="nav-ico">🏢</span> Departments
+                <span className="nav-ico">
+                  <Building2 size={16} strokeWidth={2.2} />
+                </span>
+                Departments
               </button>
+
               <button className="nav-item">
-                <span className="nav-ico">📊</span> Reports &amp; Analytics
+                <span className="nav-ico">
+                  <BarChart3 size={16} strokeWidth={2.2} />
+                </span>
+                Reports &amp; Analytics
               </button>
+
               <button className="nav-item">
-                <span className="nav-ico">⚙️</span> Settings
+                <span className="nav-ico">
+                  <Settings size={16} strokeWidth={2.2} />
+                </span>
+                Settings
               </button>
+
               <button className="nav-item">
-                <span className="nav-ico">❓</span> Help
+                <span className="nav-ico">
+                  <CircleHelp size={16} strokeWidth={2.2} />
+                </span>
+                Help
               </button>
             </nav>
 
             <div className="nav-footer">
               <button className="nav-signout" onClick={onSignOut}>
-                ↩ Sign out
+                <LogOut size={16} strokeWidth={2.2} />
+                <span>Sign out</span>
               </button>
             </div>
           </aside>
         </div>
       )}
 
-      {/* ADD DOCUMENTS MODAL */}
       {showAddDocs && (
         <div className="adddocs-overlay" onClick={() => setShowAddDocs(false)}>
           <div className="adddocs-modal" onClick={(e) => e.stopPropagation()}>
             <div className="adddocs-header">
-              <h2>ADD DOCUMENTS</h2>
+              <div>
+                <h2>ADD DOCUMENTS</h2>
+                <p className="adddocs-subtitle">
+                  Enter the document details and upload related files.
+                </p>
+              </div>
 
               <div className="adddocs-top-actions">
                 <button className="adddocs-draft">Save Draft</button>
                 <button
                   className="adddocs-x"
                   onClick={() => setShowAddDocs(false)}
+                  aria-label="Close modal"
+                  type="button"
                 >
-                  ✕
+                  <X size={18} />
                 </button>
               </div>
             </div>
 
             <div className="adddocs-body">
-              <div className="adddocs-field adddocs-search">
-                <input placeholder="Search Documents" />
-                <span className="adddocs-search-icon">🔍</span>
+              <div className="adddocs-input-wrap adddocs-search-wrap">
+                <input
+                  className="adddocs-input"
+                  placeholder="Search documents"
+                  value={docForm.search}
+                  onChange={(e) => handleDocChange("search", e.target.value)}
+                />
+                <Search className="adddocs-input-icon" size={18} />
               </div>
 
-              <select className="adddocs-field">
-                <option>Document Type</option>
-              </select>
+              <div className="adddocs-select-wrap">
+                <select
+                  className="adddocs-field"
+                  value={docForm.documentType}
+                  onChange={(e) => handleDocChange("documentType", e.target.value)}
+                >
+                  <option value="">Document Type</option>
+                  <option value="Building Permit">Building Permit</option>
+                  <option value="Business Permit">Business Permit</option>
+                  <option value="SALN">SALN</option>
+                  <option value="Support Request">Support Request</option>
+                </select>
+                <ChevronDown className="adddocs-select-icon" size={18} />
+              </div>
 
-              <select className="adddocs-field">
-                <option>Application Name</option>
-              </select>
+              <div className="adddocs-select-wrap">
+                <select
+                  className="adddocs-field"
+                  value={docForm.applicationName}
+                  onChange={(e) => handleDocChange("applicationName", e.target.value)}
+                >
+                  <option value="">Application Name</option>
+                  <option value="Permit Application">Permit Application</option>
+                  <option value="Internal Request">Internal Request</option>
+                  <option value="Office Endorsement">Office Endorsement</option>
+                </select>
+                <ChevronDown className="adddocs-select-icon" size={18} />
+              </div>
 
-              <select className="adddocs-field">
-                <option>Origin Department</option>
-              </select>
+              <div className="adddocs-select-wrap">
+                <select
+                  className="adddocs-field"
+                  value={docForm.originDepartment}
+                  onChange={(e) =>
+                    handleDocChange("originDepartment", e.target.value)
+                  }
+                >
+                  <option value="">Origin Department</option>
+                  <option value="Mayor's Office">Mayor's Office</option>
+                  <option value="Engineering">Engineering</option>
+                  <option value="Budget">Budget</option>
+                  <option value="Tourism">Tourism</option>
+                </select>
+                <ChevronDown className="adddocs-select-icon" size={18} />
+              </div>
 
               <div className="adddocs-row">
-                <select className="adddocs-field">
-                  <option>Priority</option>
-                </select>
+                <div className="adddocs-select-wrap">
+                  <select
+                    className="adddocs-field"
+                    value={docForm.priorityLabel}
+                    onChange={(e) => handleDocChange("priorityLabel", e.target.value)}
+                  >
+                    <option value="Priority">Priority</option>
+                    <option value="Classification">Classification</option>
+                  </select>
+                  <ChevronDown className="adddocs-select-icon" size={18} />
+                </div>
 
-                <select className="adddocs-field">
-                  <option>Normal</option>
-                  <option>Urgent</option>
-                </select>
+                <div className="adddocs-select-wrap">
+                  <select
+                    className="adddocs-field"
+                    value={docForm.priorityLevel}
+                    onChange={(e) => handleDocChange("priorityLevel", e.target.value)}
+                  >
+                    <option value="Normal">Normal</option>
+                    <option value="Urgent">Urgent</option>
+                    <option value="High">High</option>
+                  </select>
+                  <ChevronDown className="adddocs-select-icon" size={18} />
+                </div>
 
-                <input
-                  className="adddocs-field"
-                  value={`Date: ${new Date().toLocaleDateString()}`}
-                  readOnly
-                />
+                <div className="adddocs-input-wrap adddocs-date-wrap">
+                  <input
+                    ref={dateInputRef}
+                    type="date"
+                    className="adddocs-field adddocs-date-input"
+                    value={docForm.date}
+                    onChange={(e) => handleDocChange("date", e.target.value)}
+                  />
+
+                  <button
+                    type="button"
+                    className="adddocs-date-btn"
+                    aria-label="Open calendar"
+                    onClick={() => {
+                      if (dateInputRef.current) {
+                        if (dateInputRef.current.showPicker) {
+                          dateInputRef.current.showPicker();
+                        } else {
+                          dateInputRef.current.focus();
+                        }
+                      }
+                    }}
+                  >
+                    <CalendarDays size={18} />
+                  </button>
+                </div>
               </div>
 
               <div className="adddocs-footer">
                 <div className="adddocs-left">
-                  <button className="adddocs-small">⬆ Upload Files</button>
-                  <button className="adddocs-small">📁 View Files</button>
+                  <button className="adddocs-small" type="button">
+                    <Upload size={16} />
+                    <span>Upload Files</span>
+                  </button>
+
+                  <button className="adddocs-small adddocs-small--light" type="button">
+                    <FolderOpen size={16} />
+                    <span>View Files</span>
+                  </button>
                 </div>
 
                 <div className="adddocs-right">
-                  <button className="adddocs-save">Save</button>
+                  <button className="adddocs-save" onClick={handleSaveDoc}>
+                    Save
+                  </button>
                   <button
                     className="adddocs-cancel"
                     onClick={() => setShowAddDocs(false)}

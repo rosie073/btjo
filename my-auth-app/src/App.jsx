@@ -7,6 +7,7 @@ import ForgotReset from "./pages/ForgotReset.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import VerifyEmail from "./pages/VerifyEmail.jsx";
 import ProtectedRoute from "./routes/ProtectedRoute.jsx";
+import Documents from "./pages/Documents.jsx";
 
 export default function App() {
   return (
@@ -35,6 +36,7 @@ export default function App() {
 
         {/* 404 / catch-all */}
         <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="/documents" element={<Documents />} />
       </Routes>
     </BrowserRouter>
   );
