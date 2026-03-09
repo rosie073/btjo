@@ -1,9 +1,10 @@
-import React, { useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import "../ui/Dashboard.css";
 import { useNavigate } from "react-router-dom";
 
 // images (src/assets/)
 import seal from "../assets/logo.jpg";
+import ProfileMenu from "../components/ProfileMenu";
 
 // lucide icons
 import {
@@ -40,6 +41,46 @@ function Dashboard() {
   const [navOpen, setNavOpen] = useState(false);
   const dateInputRef = useRef(null);
   const navigate = useNavigate();
+
+  const departments = [
+    "Mayor",
+    "Tourism",
+    "PESO",
+    "MDRRMO",
+    "SB",
+    "MPDC",
+    "MCR",
+    "MBO",
+    "Acountant",
+    "MTO",
+    "Assessor",
+    "MHO",
+    "Parks & Plaza",
+    "MSWO",
+    "MENRO",
+    "ME",
+    "Streets & Bridges",
+    "20% LDF",
+    "Waterworks",
+    "Markets",
+    "Zero Waste",
+    "PNP",
+    "DILG",
+    "COMELEC",
+    "BFP",
+    "Coast Guard",
+    "DepED Elementary",
+    "DepED High School",
+  ];
+
+  const statuses = ["Pending", "Declined", "Returned", "Completed", "Incoming"];
+
+  const [filters, setFilters] = useState({
+    search: "",
+    department: "",
+    status: "",
+    dateRange: "",
+  });
 
   const [docForm, setDocForm] = useState({
     search: "",
@@ -94,9 +135,9 @@ function Dashboard() {
     {
       id: "Doc - 1001",
       title: "Building Permit Request",
-      origin: "Market",
+      origin: "Markets",
       current: "Mayor",
-      status: "Decline",
+      status: "Declined",
       assign: "J. Silivalism",
       received: "01/15/2026",
       updated: "02/15/2026",
@@ -120,7 +161,7 @@ function Dashboard() {
       title: "SALN",
       origin: "SB",
       current: "Mayor",
-      status: "Pending",
+      status: "Incoming",
       assign: "K. Pance",
       received: "01/15/2026",
       updated: "02/15/2026",
@@ -130,26 +171,26 @@ function Dashboard() {
     {
       id: "Doc - 1004",
       title: "Support Request",
-      origin: "Mayor",
+      origin: "Tourism",
       current: "Mayor",
-      status: "Reviewing",
+      status: "Returned",
       assign: "S. Edwards",
       received: "01/15/2026",
       updated: "02/15/2026",
       days: 5,
-      due: "05/15/2026",
+      due: "03/15/2026",
     },
     {
       id: "Doc - 1005",
       title: "Business Permit",
       origin: "Mayor",
       current: "Mayor",
-      status: "Reviewing",
+      status: "Completed",
       assign: "A. Mutter",
       received: "01/15/2026",
       updated: "02/15/2026",
       days: 5,
-      due: "05/15/2026",
+      due: "02/28/2026",
     },
   ];
 
@@ -207,6 +248,63 @@ function Dashboard() {
     setShowAddDocs(false);
   }
 
+  function handleFilterChange(key, value) {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function parseDate(dateStr) {
+    const [month, day, year] = dateStr.split("/");
+    return new Date(`${year}-${month}-${day}`);
+  }
+
+  const filteredDocuments = useMemo(() => {
+    const today = new Date();
+    const next7Days = new Date();
+    next7Days.setDate(today.getDate() + 7);
+
+    const next30Days = new Date();
+    next30Days.setDate(today.getDate() + 30);
+
+    return documents.filter((doc) => {
+      const searchValue = filters.search.trim().toLowerCase();
+      const matchesSearch =
+        !searchValue ||
+        doc.id.toLowerCase().includes(searchValue) ||
+        doc.title.toLowerCase().includes(searchValue) ||
+        doc.origin.toLowerCase().includes(searchValue) ||
+        doc.current.toLowerCase().includes(searchValue) ||
+        doc.assign.toLowerCase().includes(searchValue);
+
+      const matchesDepartment =
+        !filters.department ||
+        doc.origin === filters.department ||
+        doc.current === filters.department;
+
+      const matchesStatus =
+        !filters.status || doc.status === filters.status;
+
+      let matchesDateRange = true;
+      const dueDate = parseDate(doc.due);
+
+      if (filters.dateRange === "today") {
+        matchesDateRange = dueDate.toDateString() === today.toDateString();
+      } else if (filters.dateRange === "7days") {
+        matchesDateRange = dueDate >= today && dueDate <= next7Days;
+      } else if (filters.dateRange === "30days") {
+        matchesDateRange = dueDate >= today && dueDate <= next30Days;
+      } else if (filters.dateRange === "overdue") {
+        matchesDateRange = dueDate < today;
+      }
+
+      return (
+        matchesSearch &&
+        matchesDepartment &&
+        matchesStatus &&
+        matchesDateRange
+      );
+    });
+  }, [documents, filters]);
+
   return (
     <div className="page">
       <div className="app-shell">
@@ -216,28 +314,26 @@ function Dashboard() {
             <div className="topbar-title">Municipal Documents Dashboard</div>
           </div>
 
-          <div className="topbar-right">
-            <button className="icon-btn" aria-label="Notifications" type="button">
-              <Bell size={18} strokeWidth={2.2} />
-            </button>
+<div className="topbar-right">
+  <button className="icon-btn" aria-label="Notifications" type="button">
+    <Bell size={18} strokeWidth={2.2} />
+  </button>
 
-            <button className="icon-btn" aria-label="User" type="button">
-              <User size={18} strokeWidth={2.2} />
-            </button>
+  <ProfileMenu />
 
-            <button className="icon-btn" aria-label="Close" type="button">
-              <X size={18} strokeWidth={2.2} />
-            </button>
+  <button className="icon-btn" aria-label="Close" type="button">
+    <X size={18} strokeWidth={2.2} />
+  </button>
 
-            <button
-              className="icon-btn icon-btn--menu"
-              aria-label="Open menu"
-              type="button"
-              onClick={() => setNavOpen((v) => !v)}
-            >
-              <Menu size={18} strokeWidth={2.2} />
-            </button>
-          </div>
+  <button
+    className="icon-btn icon-btn--menu"
+    aria-label="Open menu"
+    type="button"
+    onClick={() => setNavOpen((v) => !v)}
+  >
+    <Menu size={18} strokeWidth={2.2} />
+  </button>
+</div>
         </header>
 
         <section className="stats-strip">
@@ -258,25 +354,54 @@ function Dashboard() {
 
             <div className="filters">
               <div className="search-wrap">
-                <input className="search" placeholder="Search Document..." />
+                <input
+                  className="search"
+                  placeholder="Search Document..."
+                  value={filters.search}
+                  onChange={(e) => handleFilterChange("search", e.target.value)}
+                />
                 <span className="search-icon">
                   <Search size={14} strokeWidth={2.2} />
                 </span>
               </div>
 
-              <select className="select">
-                <option>Filter : Department</option>
-              </select>
-              <select className="select">
-                <option>Status</option>
-              </select>
-              <select className="select">
-                <option>Date Range</option>
+              <select
+                className="select"
+                value={filters.department}
+                onChange={(e) => handleFilterChange("department", e.target.value)}
+              >
+                <option value="">Filter : Department</option>
+                {departments.map((dept) => (
+                  <option key={dept} value={dept}>
+                    {dept}
+                  </option>
+                ))}
               </select>
 
-              <button className="filter-btn" aria-label="Search" type="button">
-                <Search size={14} strokeWidth={2.2} />
-              </button>
+              <select
+                className="select"
+                value={filters.status}
+                onChange={(e) => handleFilterChange("status", e.target.value)}
+              >
+                <option value="">Status</option>
+                {statuses.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                className="select"
+                value={filters.dateRange}
+                onChange={(e) => handleFilterChange("dateRange", e.target.value)}
+              >
+                <option value="">Date Range</option>
+                <option value="today">Due Today</option>
+                <option value="7days">Next 7 Days</option>
+                <option value="30days">Next 30 Days</option>
+                <option value="overdue">Overdue</option>
+              </select>
             </div>
           </div>
 
@@ -297,24 +422,32 @@ function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                {documents.map((d) => (
-                  <tr key={d.id}>
-                    <td>{d.id}</td>
-                    <td>{d.title}</td>
-                    <td>{d.origin}</td>
-                    <td>{d.current}</td>
-                    <td>
-                      <span className={`pill ${d.status.toLowerCase()}`}>
-                        {d.status}
-                      </span>
+                {filteredDocuments.length > 0 ? (
+                  filteredDocuments.map((d) => (
+                    <tr key={d.id}>
+                      <td>{d.id}</td>
+                      <td>{d.title}</td>
+                      <td>{d.origin}</td>
+                      <td>{d.current}</td>
+                      <td>
+                        <span className={`pill ${d.status.toLowerCase()}`}>
+                          {d.status}
+                        </span>
+                      </td>
+                      <td>{d.assign}</td>
+                      <td>{d.received}</td>
+                      <td>{d.updated}</td>
+                      <td className="center">{d.days}</td>
+                      <td>{d.due}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="10" className="center" style={{ padding: "20px" }}>
+                      No documents found.
                     </td>
-                    <td>{d.assign}</td>
-                    <td>{d.received}</td>
-                    <td>{d.updated}</td>
-                    <td className="center">{d.days}</td>
-                    <td>{d.due}</td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
@@ -395,9 +528,6 @@ function Dashboard() {
                 </span>
                 Documents
               </button>
-
-
-              
 
               <button className="nav-item">
                 <span className="nav-ico">

@@ -8,6 +8,7 @@ import Dashboard from "./pages/Dashboard.jsx";
 import VerifyEmail from "./pages/VerifyEmail.jsx";
 import ProtectedRoute from "./routes/ProtectedRoute.jsx";
 import Documents from "./pages/Documents.jsx";
+import Profile from "./pages/Profile.jsx";
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot" element={<ForgotReset />} />
+        
 
         {/* verification page */}
         <Route path="/verify-email" element={<VerifyEmail />} />
@@ -37,6 +39,7 @@ export default function App() {
         {/* 404 / catch-all */}
         <Route path="*" element={<Navigate to="/login" replace />} />
         <Route path="/documents" element={<Documents />} />
+         <Route path="/profile" element={<Profile />} />
       </Routes>
     </BrowserRouter>
   );

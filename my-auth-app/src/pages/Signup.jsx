@@ -15,16 +15,9 @@ import {
 } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 
-/** Password rules:
- * - min 8 chars
- * - at least 1 uppercase
- * - at least 1 lowercase
- * - at least 1 number
- * - at least 1 special character
- */
-const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+const passwordRegex =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 
-/** Local-only password input so we don't change TextField used by Login/Forgot */
 function PasswordField({
   name,
   placeholder,
@@ -60,7 +53,6 @@ function PasswordField({
           title={show ? "Hide" : "Show"}
         >
           {show ? (
-            // eye
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path
                 d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"
@@ -75,7 +67,6 @@ function PasswordField({
               />
             </svg>
           ) : (
-            // eye-off
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M3 3l18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               <path
@@ -165,14 +156,12 @@ export default function Signup() {
     return "Passwords do not match.";
   }, [form.password, form.confirm]);
 
-  // If Google redirect flow happens, you can store here too
   useEffect(() => {
     getRedirectResult(auth)
       .then(async (result) => {
         if (!result?.user) return;
         const user = result.user;
 
-        // Save profile to Firestore (merge so it won't overwrite existing fields)
         await setDoc(
           doc(db, "users", user.uid),
           {
@@ -180,7 +169,9 @@ export default function Signup() {
             firstName: user.displayName?.split(" ")[0] || "",
             lastName: user.displayName?.split(" ").slice(1).join(" ") || "",
             email: user.email || "",
+            number: "",
             provider: "google",
+            photoURL: user.photoURL || "",
             emailVerified: user.emailVerified,
             updatedAt: serverTimestamp(),
             createdAt: serverTimestamp(),
@@ -208,7 +199,6 @@ export default function Signup() {
       });
   }, [navigate]);
 
-  // ✅ EMAIL/PASSWORD SIGNUP + FIRESTORE SAVE
   async function onSubmit(e) {
     e.preventDefault();
 
@@ -230,7 +220,6 @@ export default function Signup() {
     try {
       const cred = await createUserWithEmailAndPassword(auth, form.email, form.password);
 
-      // Save profile (NO password!)
       await setDoc(doc(db, "users", cred.user.uid), {
         uid: cred.user.uid,
         firstName: form.firstName,
@@ -238,6 +227,7 @@ export default function Signup() {
         email: form.email,
         number: form.number,
         provider: "password",
+        photoURL: "",
         emailVerified: cred.user.emailVerified,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
@@ -254,7 +244,6 @@ export default function Signup() {
     }
   }
 
-  // ✅ GOOGLE SIGNUP + FIRESTORE SAVE
   async function handleGoogleSignup() {
     try {
       const result = await signInWithPopup(auth, googleProvider);
@@ -269,6 +258,7 @@ export default function Signup() {
           email: user.email || "",
           number: form.number || "",
           provider: "google",
+          photoURL: user.photoURL || "",
           emailVerified: user.emailVerified,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
