@@ -454,8 +454,7 @@ export default function Documents() {
                 </span>
                 Documents
               </button>
-
-              <button className="docs-nav-item">
+           <button className="docs-nav-item">
                 <span className="docs-nav-ico">
                   <MapPinned size={16} />
                 </span>
