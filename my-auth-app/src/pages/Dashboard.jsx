@@ -6,7 +6,7 @@ import seal from "../assets/logo.jpg";
 import bell from "../assets/image.png";
 import userIcon from "../assets/user-3.png";
 import closeIcon from "../assets/close.png";
-import menuIcon from "../assets/menu.png";
+import menuIcon from "../assets/menu.png"; 
 
 function Dashboard() {
   const [showAddDocs, setShowAddDocs] = useState(false);
