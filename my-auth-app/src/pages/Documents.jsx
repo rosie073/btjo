@@ -3,10 +3,10 @@ import { useNavigate } from "react-router-dom";
 import "../ui/Documents.css";
 
 import seal from "../assets/logo.jpg";
+import ProfileMenu from "../components/ProfileMenu";
 
 import {
   Bell,
-  User,
   X,
   Menu,
   Search,
@@ -182,32 +182,37 @@ export default function Documents() {
 
     const today = new Date();
     const receivedDate = parseDate(doc.received);
-
-    const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const startOfToday = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    );
 
     switch (range) {
-      case "today": {
+      case "today":
         return receivedDate.toDateString() === startOfToday.toDateString();
-      }
+
       case "last7days": {
         const last7 = new Date(startOfToday);
         last7.setDate(startOfToday.getDate() - 7);
         return receivedDate >= last7 && receivedDate <= today;
       }
+
       case "last30days": {
         const last30 = new Date(startOfToday);
         last30.setDate(startOfToday.getDate() - 30);
         return receivedDate >= last30 && receivedDate <= today;
       }
-      case "thisMonth": {
+
+      case "thisMonth":
         return (
           receivedDate.getMonth() === today.getMonth() &&
           receivedDate.getFullYear() === today.getFullYear()
         );
-      }
-      case "thisYear": {
+
+      case "thisYear":
         return receivedDate.getFullYear() === today.getFullYear();
-      }
+
       default:
         return true;
     }
@@ -266,33 +271,34 @@ export default function Documents() {
     alert("Sign out clicked");
   }
 
-  function clearFilters() {
-    setSearchTerm("");
-    setDepartmentFilter("");
-    setStatusFilter("");
-    setDateRangeFilter("");
-    setActiveTab("All Files");
-  }
-
   return (
     <div className="docs-page">
       <div className="docs-shell">
         <header className="docs-topbar">
           <div className="docs-topbar-left">
             <img className="docs-seal" src={seal} alt="Seal" />
-            <div className="docs-topbar-title">Municipal Documents Dashboard</div>
+            <div className="docs-topbar-title">Municipal Documents</div>
           </div>
 
           <div className="docs-topbar-right">
-            <button className="docs-icon-btn" type="button" aria-label="Notifications">
+            <button
+              className="docs-icon-btn"
+              type="button"
+              aria-label="Notifications"
+            >
               <Bell size={18} />
             </button>
-            <button className="docs-icon-btn" type="button" aria-label="User">
-              <User size={18} />
-            </button>
-            <button className="docs-icon-btn" type="button" aria-label="Close">
+
+            <ProfileMenu />
+
+            <button
+              className="docs-icon-btn"
+              type="button"
+              aria-label="Close"
+            >
               <X size={18} />
             </button>
+
             <button
               className="docs-icon-btn"
               type="button"
@@ -368,8 +374,6 @@ export default function Documents() {
                 </select>
                 <ChevronDown size={14} className="docs-select-icon" />
               </div>
-
-             
             </div>
           </div>
 
@@ -411,9 +415,7 @@ export default function Documents() {
                       <td>{doc.origin}</td>
                       <td>{doc.current}</td>
                       <td>
-                        <span
-                          className={`docs-status ${doc.status.toLowerCase()}`}
-                        >
+                        <span className={`docs-status ${doc.status.toLowerCase()}`}>
                           {doc.status}
                         </span>
                       </td>
@@ -439,16 +441,25 @@ export default function Documents() {
 
       {navOpen && (
         <div className="docs-nav-overlay" onClick={() => setNavOpen(false)}>
-          <aside className="docs-right-nav" onClick={(e) => e.stopPropagation()}>
+          <aside
+            className="docs-right-nav"
+            onClick={(e) => e.stopPropagation()}
+          >
             <nav className="docs-nav-list">
-              <button className="docs-nav-item" onClick={() => navigate("/dashboard")}>
+              <button
+                className="docs-nav-item"
+                onClick={() => navigate("/dashboard")}
+              >
                 <span className="docs-nav-ico">
                   <LayoutDashboard size={16} />
                 </span>
                 Dashboard
               </button>
 
-              <button className="docs-nav-item active" onClick={() => navigate("/documents")}>
+              <button
+                className="docs-nav-item active"
+                onClick={() => navigate("/documents")}
+              >
                 <span className="docs-nav-ico">
                   <Files size={16} />
                 </span>
