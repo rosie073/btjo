@@ -993,4 +993,88 @@ body {
 
 
 
+.pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  min-width: 72px;
+  text-align: center;
+}
 
+.pill.pending { background: #d6a043; }
+.pill.declined { background: #d64141; }
+.pill.returned { background: #ef7d32; }
+.pill.completed { background: #2f8c4a; }
+.pill.incoming { background: #4f78d6; }
+
+
+
+
+
+.profile-wrapper {
+  position: relative;
+  z-index: 2000;
+}
+
+.profile-dropdown {
+  position: absolute;
+  top: 44px;
+  right: 0;
+  width: 170px;
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  overflow: hidden;
+  z-index: 3000;
+}
+
+.profile-dropdown button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.profile-dropdown button:hover {
+  background: #f3f6fb;
+}
+
+.profile-dropdown .logout {
+  color: red;
+  font-weight: bold;
+}
+
+
+.profile-icon-btn {
+  padding: 0;
+  overflow: hidden;
+}
+
+.topbar-profile-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+
+
+.icon-btn {
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+}
