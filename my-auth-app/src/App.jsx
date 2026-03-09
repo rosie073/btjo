@@ -8,6 +8,8 @@ import Dashboard from "./pages/Dashboard.jsx";
 import VerifyEmail from "./pages/VerifyEmail.jsx";
 import ProtectedRoute from "./routes/ProtectedRoute.jsx";
 import Documents from "./pages/Documents.jsx";
+import Trackingmain from "./pages/Trackingmain.jsx";
+import Trackingdetails from "./pages/Trackingdetails.jsx";
 
 export default function App() {
   return (
@@ -33,6 +35,24 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route
+            path="/tracking"
+            element={
+              <ProtectedRoute>
+                <Trackingmain />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/tracking/:docId"
+            element={
+              <ProtectedRoute>
+                <Trackingdetails />
+              </ProtectedRoute>
+            }
+          />
 
         {/* 404 / catch-all */}
         <Route path="*" element={<Navigate to="/login" replace />} />
