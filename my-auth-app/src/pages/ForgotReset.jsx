@@ -8,6 +8,8 @@ export default function ForgotReset() {
   const [email, setEmail] = useState("");
   const [pw, setPw] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [showPw, setShowPw] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   function onForgot(e) {
     e.preventDefault();
