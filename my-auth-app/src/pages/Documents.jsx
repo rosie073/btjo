@@ -455,9 +455,9 @@ export default function Documents() {
                 Documents
               </button>
 
-             <button className="docs-nav-item active" onClick={() => navigate("/tracking")}>
+              <button className="docs-nav-item">
                 <span className="docs-nav-ico">
-                   <Files size={16} />
+                  <MapPinned size={16} />
                 </span>
                 Tracking
               </button>
