@@ -1,8 +1,12 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../ui/Documents.css";
 
 import seal from "../assets/logo.jpg";
+
+import ProfileMenu from "../components/ProfileMenu";
+import AppModal from "../components/AppModal";
+
 
 import {
   Bell,
@@ -19,17 +23,84 @@ import {
   Settings,
   CircleHelp,
   LogOut,
+  Pencil,
+  Trash2,
 } from "lucide-react";
+
+import {
+  getDocuments,
+  updateDocument,
+  deleteDocument,
+  seedDocuments,
+} from "../data/documentStore";
 
 export default function Documents() {
   const navigate = useNavigate();
   const [navOpen, setNavOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("All Files");
+  const [documents, setDocuments] = useState([]);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [dateRangeFilter, setDateRangeFilter] = useState("");
+
+const [modal, setModal] = useState({
+  open: false,
+  title: "",
+  message: "",
+  type: "alert",
+  onConfirm: null,
+});
+
+function showAlertModal(title, message, callback = null) {
+  setModal({
+    open: true,
+    title,
+    message,
+    type: "alert",
+    onConfirm: callback,
+  });
+}
+
+function showConfirmModal(title, message, callback) {
+  setModal({
+    open: true,
+    title,
+    message,
+    type: "confirm",
+    onConfirm: callback,
+  });
+}
+
+function closeModal() {
+  setModal({
+    open: false,
+    title: "",
+    message: "",
+    type: "alert",
+    onConfirm: null,
+  });
+}
+
+
+
+  const [editingDoc, setEditingDoc] = useState(null);
+  const [editForm, setEditForm] = useState({
+
+
+    
+    title: "",
+    origin: "",
+    current: "",
+    status: "",
+    assign: "",
+    received: "",
+    updated: "",
+    days: 0,
+    due: "",
+    priority: "Normal",
+  });
 
   const departments = [
     "Mayor",
@@ -64,104 +135,21 @@ export default function Documents() {
 
   const statuses = ["Pending", "Declined", "Returned", "Completed", "Incoming"];
 
-  const documents = [
-    {
-      id: "Doc - 1001",
-      title: "Building Permit Request",
-      origin: "Markets",
-      current: "Mayor",
-      status: "Declined",
-      assign: "J. Silivalism",
-      received: "01/15/2026",
-      updated: "02/15/2026",
-      days: 5,
-      due: "05/15/2026",
-    },
-    {
-      id: "Doc - 1002",
-      title: "Approval Document",
-      origin: "Mayor",
-      current: "Mayor",
-      status: "Returned",
-      assign: "D. Coley",
-      received: "01/15/2026",
-      updated: "02/15/2026",
-      days: 5,
-      due: "05/15/2026",
-    },
-    {
-      id: "Doc - 1003",
-      title: "SALN",
-      origin: "SB",
-      current: "Mayor",
-      status: "Pending",
-      assign: "K. Pance",
-      received: "01/15/2026",
-      updated: "02/15/2026",
-      days: 5,
-      due: "05/15/2026",
-    },
-    {
-      id: "Doc - 1004",
-      title: "Support Request",
-      origin: "Mayor",
-      current: "Mayor",
-      status: "Pending",
-      assign: "S. Edwards",
-      received: "01/15/2026",
-      updated: "02/15/2026",
-      days: 5,
-      due: "05/15/2026",
-    },
-    {
-      id: "Doc - 1005",
-      title: "Business Permit",
-      origin: "Mayor",
-      current: "Mayor",
-      status: "Returned",
-      assign: "A. Mutter",
-      received: "01/15/2026",
-      updated: "02/15/2026",
-      days: 5,
-      due: "05/15/2026",
-    },
-    {
-      id: "Doc - 1006",
-      title: "Paper",
-      origin: "MPDC",
-      current: "MPDC",
-      status: "Completed",
-      assign: "A. Mutter",
-      received: "01/15/2026",
-      updated: "02/15/2026",
-      days: 5,
-      due: "05/15/2026",
-    },
-    {
-      id: "Doc - 1007",
-      title: "Paper",
-      origin: "MPDC",
-      current: "MPDC",
-      status: "Incoming",
-      assign: "A. Mutter",
-      received: "01/15/2026",
-      updated: "02/15/2026",
-      days: 5,
-      due: "05/15/2026",
-    },
-    {
-      id: "Doc - 1008",
-      title: "Waterworks",
-      origin: "Waterworks",
-      current: "Waterworks",
-      status: "Returned",
-      assign: "A. Mutter",
-      received: "01/15/2026",
-      updated: "02/15/2026",
-      days: 5,
-      due: "05/15/2026",
-    },
-  ];
+  useEffect(() => {
+    seedDocuments();
+    loadDocuments();
+
+    const refresh = () => loadDocuments();
+    window.addEventListener("documentsUpdated", refresh);
+
+    return () => {
+      window.removeEventListener("documentsUpdated", refresh);
+    };
+  }, []);
+
+  function loadDocuments() {
+    setDocuments(getDocuments());
+  }
 
   const tabs = [
     "All Files",
@@ -251,7 +239,7 @@ export default function Documents() {
         matchesDate
       );
     });
-  }, [activeTab, searchTerm, departmentFilter, statusFilter, dateRangeFilter]);
+  }, [documents, activeTab, searchTerm, departmentFilter, statusFilter, dateRangeFilter]);
 
   const counts = {
     "All Files": documents.length,
@@ -262,9 +250,38 @@ export default function Documents() {
     Incoming: documents.filter((d) => d.status === "Incoming").length,
   };
 
-  function onSignOut() {
-    alert("Sign out clicked");
+function onSignOut() {
+  showAlertModal("Sign Out", "Sign out clicked.");
+}
+
+function handleDelete(id) {
+  showConfirmModal(
+    "Delete Document",
+    "Are you sure you want to delete this document?",
+    () => {
+      deleteDocument(id);
+      loadDocuments();
+      showAlertModal("Deleted", "Document deleted successfully.");
+    }
+  );
+}
+
+  function handleEditClick(doc) {
+    setEditingDoc(doc);
+    setEditForm({
+      title: doc.title,
+      origin: doc.origin,
+      current: doc.current,
+      status: doc.status,
+      assign: doc.assign,
+      received: doc.received,
+      updated: doc.updated,
+      days: doc.days,
+      due: doc.due,
+      priority: doc.priority || "Normal",
+    });
   }
+
 
   function clearFilters() {
     setSearchTerm("");
@@ -273,6 +290,30 @@ export default function Documents() {
     setDateRangeFilter("");
     setActiveTab("All Files");
   }
+
+
+function handleEditSave() {
+  if (!editingDoc) return;
+
+  if (!editForm.title || !editForm.origin || !editForm.current || !editForm.status) {
+    showAlertModal(
+      "Missing Required Fields",
+      "Please complete the required document information before saving."
+    );
+    return;
+  }
+
+  updateDocument({
+    ...editingDoc,
+    ...editForm,
+    days: Number(editForm.days) || 0,
+  });
+
+  setEditingDoc(null);
+  loadDocuments();
+  showAlertModal("Success", "Document updated successfully.");
+}
+
 
   return (
     <div className="docs-page">
@@ -400,6 +441,7 @@ export default function Documents() {
                   <th>Last Update</th>
                   <th>Days In Dept.</th>
                   <th>Due Date</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -422,11 +464,43 @@ export default function Documents() {
                       <td>{doc.updated}</td>
                       <td className="center">{doc.days}</td>
                       <td>{doc.due}</td>
+                      <td>
+                        <div style={{ display: "flex", gap: "8px" }}>
+                          <button
+                            type="button"
+                            onClick={() => handleEditClick(doc)}
+                            style={{
+                              border: "none",
+                              background: "#4f74db",
+                              color: "#fff",
+                              padding: "8px 10px",
+                              borderRadius: "8px",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <Pencil size={14} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(doc.id)}
+                            style={{
+                              border: "none",
+                              background: "#e24b4b",
+                              color: "#fff",
+                              padding: "8px 10px",
+                              borderRadius: "8px",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="10" className="docs-empty">
+                    <td colSpan="11" className="docs-empty">
                       No documents found.
                     </td>
                   </tr>
@@ -506,6 +580,119 @@ export default function Documents() {
           </aside>
         </div>
       )}
+
+      {editingDoc && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.35)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
+          }}
+          onClick={() => setEditingDoc(null)}
+        >
+          <div
+            style={{
+              width: "700px",
+              maxWidth: "95%",
+              background: "#fff",
+              borderRadius: "18px",
+              padding: "24px",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 style={{ marginBottom: "18px" }}>Edit Document</h2>
+
+            <div style={{ display: "grid", gap: "12px" }}>
+              <input
+                value={editForm.title}
+                onChange={(e) => setEditForm((p) => ({ ...p, title: e.target.value }))}
+                placeholder="Document Title"
+              />
+              <input
+                value={editForm.origin}
+                onChange={(e) => setEditForm((p) => ({ ...p, origin: e.target.value }))}
+                placeholder="Origin Department"
+              />
+              <input
+                value={editForm.current}
+                onChange={(e) => setEditForm((p) => ({ ...p, current: e.target.value }))}
+                placeholder="Current Department"
+              />
+              <select
+                value={editForm.status}
+                onChange={(e) => setEditForm((p) => ({ ...p, status: e.target.value }))}
+              >
+                {statuses.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+              <input
+                value={editForm.assign}
+                onChange={(e) => setEditForm((p) => ({ ...p, assign: e.target.value }))}
+                placeholder="Assign To"
+              />
+              <input
+                value={editForm.received}
+                onChange={(e) => setEditForm((p) => ({ ...p, received: e.target.value }))}
+                placeholder="Received Date (MM/DD/YYYY)"
+              />
+              <input
+                value={editForm.updated}
+                onChange={(e) => setEditForm((p) => ({ ...p, updated: e.target.value }))}
+                placeholder="Last Update (MM/DD/YYYY)"
+              />
+              <input
+                value={editForm.due}
+                onChange={(e) => setEditForm((p) => ({ ...p, due: e.target.value }))}
+                placeholder="Due Date (MM/DD/YYYY)"
+              />
+              <input
+                type="number"
+                value={editForm.days}
+                onChange={(e) => setEditForm((p) => ({ ...p, days: e.target.value }))}
+                placeholder="Days In Department"
+              />
+            </div>
+
+            <div
+              style={{
+                marginTop: "18px",
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: "10px",
+              }}
+            >
+              <button onClick={() => setEditingDoc(null)}>Cancel</button>
+              <button onClick={handleEditSave}>Save Changes</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+<AppModal
+  open={modal.open}
+  title={modal.title}
+  message={modal.message}
+  type={modal.type}
+  onCancel={closeModal}
+  onConfirm={() => {
+    const callback = modal.onConfirm;
+    closeModal();
+    if (callback) callback();
+  }}
+/>
+
+
+
+
+
     </div>
   );
 }

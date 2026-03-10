@@ -348,3 +348,103 @@ body {
   cursor: pointer;
   font-weight: 700;
 }
+
+
+.docs-table-wrap {
+  overflow-x: auto;
+}
+
+.docs-list-table {
+  min-width: 1450px;
+}
+
+
+
+.appmodal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+}
+
+.appmodal-box {
+  width: 100%;
+  max-width: 460px;
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+  animation: modalFadeIn 0.18s ease;
+}
+
+.appmodal-header {
+  padding: 22px 24px 8px;
+}
+
+.appmodal-header h3 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  color: #0d2c6c;
+}
+
+.appmodal-body {
+  padding: 0 24px 18px;
+}
+
+.appmodal-body p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #334155;
+}
+
+.appmodal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 0 24px 24px;
+}
+
+.appmodal-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.appmodal-btn-cancel {
+  background: #e5e7eb;
+  color: #1f2937;
+}
+
+.appmodal-btn-cancel:hover {
+  background: #d1d5db;
+}
+
+.appmodal-btn-confirm {
+  background: #3158c9;
+  color: #fff;
+}
+
+.appmodal-btn-confirm:hover {
+  background: #2649ae;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

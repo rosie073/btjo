@@ -1,21 +1,17 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import "../ui/Dashboard.css";
 import { useNavigate } from "react-router-dom";
-
-// images (src/assets/)
 import seal from "../assets/logo.jpg";
 import ProfileMenu from "../components/ProfileMenu";
+import AppModal from "../components/AppModal";
 
-// lucide icons
 import {
   Bell,
-  User,
   X,
   Menu,
   Search,
   ChevronDown,
   Upload,
-  FolderOpen,
   CalendarDays,
   FileText,
   ClipboardList,
@@ -34,13 +30,55 @@ import {
   Shield,
   Wrench,
   Landmark,
+  Trash2,
+  Paperclip,
 } from "lucide-react";
+
+import {
+  getDocuments,
+  addDocument,
+  generateDocId,
+  seedDocuments,
+} from "../data/documentStore";
 
 function Dashboard() {
   const [showAddDocs, setShowAddDocs] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
+  const [documents, setDocuments] = useState([]);
+
   const dateInputRef = useRef(null);
+  const fileInputRef = useRef(null);
   const navigate = useNavigate();
+
+  const [modal, setModal] = useState({
+  open: false,
+  title: "",
+  message: "",
+  type: "alert",
+  onConfirm: null,
+});
+
+function showAlertModal(title, message, callback = null) {
+  setModal({
+    open: true,
+    title,
+    message,
+    type: "alert",
+    onConfirm: callback,
+  });
+}
+
+function closeModal() {
+  setModal({
+    open: false,
+    title: "",
+    message: "",
+    type: "alert",
+    onConfirm: null,
+  });
+}
+
+
 
   const departments = [
     "Mayor",
@@ -51,7 +89,7 @@ function Dashboard() {
     "MPDC",
     "MCR",
     "MBO",
-    "Acountant",
+    "Accountant",
     "MTO",
     "Assessor",
     "MHO",
@@ -92,107 +130,75 @@ function Dashboard() {
     date: new Date().toISOString().split("T")[0],
   });
 
-  const stats = [
-    {
-      label: "Total Documents",
-      value: 211,
-      className: "blue",
-      icon: <FileText size={15} strokeWidth={2.2} />,
-    },
-    {
-      label: "In Progress",
-      value: 56,
-      className: "green",
-      icon: <ClipboardList size={15} strokeWidth={2.2} />,
-    },
-    {
-      label: "Completed",
-      value: 81,
-      className: "mint",
-      icon: <CheckSquare size={15} strokeWidth={2.2} />,
-    },
-    {
-      label: "Overdue",
-      value: 25,
-      className: "amber",
-      icon: <Clock3 size={15} strokeWidth={2.2} />,
-    },
-    {
-      label: "Urgent",
-      value: 10,
-      className: "red",
-      icon: <Siren size={15} strokeWidth={2.2} />,
-    },
-    {
-      label: "Alert",
-      value: 4,
-      className: "navy",
-      icon: <TriangleAlert size={15} strokeWidth={2.2} />,
-    },
-  ];
+  const [uploadedFiles, setUploadedFiles] = useState([]);
 
-  const documents = [
-    {
-      id: "Doc - 1001",
-      title: "Building Permit Request",
-      origin: "Markets",
-      current: "Mayor",
-      status: "Declined",
-      assign: "J. Silivalism",
-      received: "01/15/2026",
-      updated: "02/15/2026",
-      days: 5,
-      due: "05/15/2026",
-    },
-    {
-      id: "Doc - 1002",
-      title: "Approval Document",
-      origin: "Mayor",
-      current: "Mayor",
-      status: "Pending",
-      assign: "D. Coley",
-      received: "01/15/2026",
-      updated: "02/15/2026",
-      days: 5,
-      due: "05/15/2026",
-    },
-    {
-      id: "Doc - 1003",
-      title: "SALN",
-      origin: "SB",
-      current: "Mayor",
-      status: "Incoming",
-      assign: "K. Pance",
-      received: "01/15/2026",
-      updated: "02/15/2026",
-      days: 5,
-      due: "05/15/2026",
-    },
-    {
-      id: "Doc - 1004",
-      title: "Support Request",
-      origin: "Tourism",
-      current: "Mayor",
-      status: "Returned",
-      assign: "S. Edwards",
-      received: "01/15/2026",
-      updated: "02/15/2026",
-      days: 5,
-      due: "03/15/2026",
-    },
-    {
-      id: "Doc - 1005",
-      title: "Business Permit",
-      origin: "Mayor",
-      current: "Mayor",
-      status: "Completed",
-      assign: "A. Mutter",
-      received: "01/15/2026",
-      updated: "02/15/2026",
-      days: 5,
-      due: "02/28/2026",
-    },
-  ];
+  useEffect(() => {
+    seedDocuments();
+    loadDocuments();
+
+    const refresh = () => loadDocuments();
+    window.addEventListener("documentsUpdated", refresh);
+
+    return () => {
+      window.removeEventListener("documentsUpdated", refresh);
+    };
+  }, []);
+
+  function loadDocuments() {
+    setDocuments(getDocuments());
+  }
+
+  const stats = useMemo(() => {
+    const total = documents.length;
+    const inProgress = documents.filter(
+      (d) => d.status === "Pending" || d.status === "Incoming" || d.status === "Returned"
+    ).length;
+    const completed = documents.filter((d) => d.status === "Completed").length;
+
+    const today = new Date();
+    const overdue = documents.filter((d) => parseDate(d.due) < today).length;
+    const urgent = documents.filter((d) => d.priority === "Urgent" || d.priority === "High").length;
+    const alert = documents.filter((d) => d.status === "Declined").length;
+
+    return [
+      {
+        label: "Total Documents",
+        value: total,
+        className: "blue",
+        icon: <FileText size={15} strokeWidth={2.2} />,
+      },
+      {
+        label: "In Progress",
+        value: inProgress,
+        className: "green",
+        icon: <ClipboardList size={15} strokeWidth={2.2} />,
+      },
+      {
+        label: "Completed",
+        value: completed,
+        className: "mint",
+        icon: <CheckSquare size={15} strokeWidth={2.2} />,
+      },
+      {
+        label: "Overdue",
+        value: overdue,
+        className: "amber",
+        icon: <Clock3 size={15} strokeWidth={2.2} />,
+      },
+      {
+        label: "Urgent",
+        value: urgent,
+        className: "red",
+        icon: <Siren size={15} strokeWidth={2.2} />,
+      },
+      {
+        label: "Alert",
+        value: alert,
+        className: "navy",
+        icon: <TriangleAlert size={15} strokeWidth={2.2} />,
+      },
+    ];
+  }, [documents]);
 
   const deptCards = [
     {
@@ -235,21 +241,96 @@ function Dashboard() {
     { label: "Approved by Budget Office", date: "02/10/2026", type: "ok" },
   ];
 
-  function onSignOut() {
-    alert("Sign out clicked");
-  }
+function onSignOut() {
+  showAlertModal("Sign Out", "Sign out clicked.");
+}
 
   function handleDocChange(key, value) {
     setDocForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  function handleSaveDoc() {
-    console.log("Saved document:", docForm);
-    setShowAddDocs(false);
+  function formatInputDateToDisplay(dateValue) {
+    if (!dateValue) return "";
+    const [year, month, day] = dateValue.split("-");
+    return `${month}/${day}/${year}`;
   }
+
+function handleSaveDoc() {
+  if (
+    !docForm.documentType ||
+    !docForm.applicationName ||
+    !docForm.originDepartment
+  ) {
+    showAlertModal(
+      "Missing Required Fields",
+      "Please fill in Document Type, Application Name, and Origin Department."
+    );
+    return;
+  }
+
+  const displayDate = formatInputDateToDisplay(docForm.date);
+
+  const newDocument = {
+    id: generateDocId(),
+    title: docForm.applicationName,
+    origin: docForm.originDepartment,
+    current: docForm.originDepartment,
+    status: "Incoming",
+    assign: "Unassigned",
+    received: displayDate,
+    updated: displayDate,
+    days: 0,
+    due: displayDate,
+    priority: docForm.priorityLevel,
+    documentType: docForm.documentType,
+    files: uploadedFiles.map((file) => ({
+      name: file.name,
+      size: file.size,
+    })),
+  };
+
+  addDocument(newDocument);
+
+  setDocForm({
+    search: "",
+    documentType: "",
+    applicationName: "",
+    originDepartment: "",
+    priorityLabel: "Priority",
+    priorityLevel: "Normal",
+    date: new Date().toISOString().split("T")[0],
+  });
+  setUploadedFiles([]);
+  setShowAddDocs(false);
+  loadDocuments();
+
+  showAlertModal("Success", "Document saved successfully.");
+}
 
   function handleFilterChange(key, value) {
     setFilters((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function handleUploadFiles() {
+    if (fileInputRef.current) fileInputRef.current.click();
+  }
+
+  function handleFileSelect(e) {
+    const selectedFiles = Array.from(e.target.files || []);
+    if (selectedFiles.length === 0) return;
+
+    setUploadedFiles((prev) => [...prev, ...selectedFiles]);
+    e.target.value = "";
+  }
+
+  function handleRemoveFile(indexToRemove) {
+    setUploadedFiles((prev) => prev.filter((_, index) => index !== indexToRemove));
+  }
+
+  function formatFileSize(size) {
+    if (size < 1024) return `${size} B`;
+    if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+    return `${(size / (1024 * 1024)).toFixed(1)} MB`;
   }
 
   function parseDate(dateStr) {
@@ -267,6 +348,7 @@ function Dashboard() {
 
     return documents.filter((doc) => {
       const searchValue = filters.search.trim().toLowerCase();
+
       const matchesSearch =
         !searchValue ||
         doc.id.toLowerCase().includes(searchValue) ||
@@ -280,8 +362,7 @@ function Dashboard() {
         doc.origin === filters.department ||
         doc.current === filters.department;
 
-      const matchesStatus =
-        !filters.status || doc.status === filters.status;
+      const matchesStatus = !filters.status || doc.status === filters.status;
 
       let matchesDateRange = true;
       const dueDate = parseDate(doc.due);
@@ -314,26 +395,26 @@ function Dashboard() {
             <div className="topbar-title">Municipal Documents Dashboard</div>
           </div>
 
-<div className="topbar-right">
-  <button className="icon-btn" aria-label="Notifications" type="button">
-    <Bell size={18} strokeWidth={2.2} />
-  </button>
+          <div className="topbar-right">
+            <button className="icon-btn" aria-label="Notifications" type="button">
+              <Bell size={18} strokeWidth={2.2} />
+            </button>
 
-  <ProfileMenu />
+            <ProfileMenu />
 
-  <button className="icon-btn" aria-label="Close" type="button">
-    <X size={18} strokeWidth={2.2} />
-  </button>
+            <button className="icon-btn" aria-label="Close" type="button">
+              <X size={18} strokeWidth={2.2} />
+            </button>
 
-  <button
-    className="icon-btn icon-btn--menu"
-    aria-label="Open menu"
-    type="button"
-    onClick={() => setNavOpen((v) => !v)}
-  >
-    <Menu size={18} strokeWidth={2.2} />
-  </button>
-</div>
+            <button
+              className="icon-btn icon-btn--menu"
+              aria-label="Open menu"
+              type="button"
+              onClick={() => setNavOpen((v) => !v)}
+            >
+              <Menu size={18} strokeWidth={2.2} />
+            </button>
+          </div>
         </header>
 
         <section className="stats-strip">
@@ -594,7 +675,6 @@ function Dashboard() {
               </div>
 
               <div className="adddocs-top-actions">
-                <button className="adddocs-draft">Save Draft</button>
                 <button
                   className="adddocs-x"
                   onClick={() => setShowAddDocs(false)}
@@ -617,48 +697,36 @@ function Dashboard() {
                 <Search className="adddocs-input-icon" size={18} />
               </div>
 
-              <div className="adddocs-select-wrap">
-                <select
-                  className="adddocs-field"
+              <div className="adddocs-input-wrap">
+                <input
+                  className="adddocs-input"
+                  placeholder="Document Type"
                   value={docForm.documentType}
                   onChange={(e) => handleDocChange("documentType", e.target.value)}
-                >
-                  <option value="">Document Type</option>
-                  <option value="Building Permit">Building Permit</option>
-                  <option value="Business Permit">Business Permit</option>
-                  <option value="SALN">SALN</option>
-                  <option value="Support Request">Support Request</option>
-                </select>
-                <ChevronDown className="adddocs-select-icon" size={18} />
+                />
               </div>
 
-              <div className="adddocs-select-wrap">
-                <select
-                  className="adddocs-field"
+              <div className="adddocs-input-wrap">
+                <input
+                  className="adddocs-input"
+                  placeholder="Application Name"
                   value={docForm.applicationName}
                   onChange={(e) => handleDocChange("applicationName", e.target.value)}
-                >
-                  <option value="">Application Name</option>
-                  <option value="Permit Application">Permit Application</option>
-                  <option value="Internal Request">Internal Request</option>
-                  <option value="Office Endorsement">Office Endorsement</option>
-                </select>
-                <ChevronDown className="adddocs-select-icon" size={18} />
+                />
               </div>
 
               <div className="adddocs-select-wrap">
                 <select
                   className="adddocs-field"
                   value={docForm.originDepartment}
-                  onChange={(e) =>
-                    handleDocChange("originDepartment", e.target.value)
-                  }
+                  onChange={(e) => handleDocChange("originDepartment", e.target.value)}
                 >
                   <option value="">Origin Department</option>
-                  <option value="Mayor's Office">Mayor's Office</option>
-                  <option value="Engineering">Engineering</option>
-                  <option value="Budget">Budget</option>
-                  <option value="Tourism">Tourism</option>
+                  {departments.map((dept) => (
+                    <option key={dept} value={dept}>
+                      {dept}
+                    </option>
+                  ))}
                 </select>
                 <ChevronDown className="adddocs-select-icon" size={18} />
               </div>
@@ -717,16 +785,58 @@ function Dashboard() {
                 </div>
               </div>
 
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                style={{ display: "none" }}
+                onChange={handleFileSelect}
+              />
+
+              {uploadedFiles.length > 0 && (
+                <div className="uploaded-files-box">
+                  <div className="uploaded-files-title">
+                    Uploaded Files ({uploadedFiles.length})
+                  </div>
+
+                  <div className="uploaded-files-list">
+                    {uploadedFiles.map((file, index) => (
+                      <div
+                        key={`${file.name}-${file.lastModified}-${index}`}
+                        className="uploaded-file-item"
+                      >
+                        <div className="uploaded-file-left">
+                          <Paperclip size={16} color="#234a91" />
+                          <div className="uploaded-file-text">
+                            <div className="uploaded-file-name">{file.name}</div>
+                            <div className="uploaded-file-size">
+                              {formatFileSize(file.size)}
+                            </div>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveFile(index)}
+                          className="uploaded-file-remove"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="adddocs-footer">
                 <div className="adddocs-left">
-                  <button className="adddocs-small" type="button">
+                  <button
+                    className="adddocs-small"
+                    type="button"
+                    onClick={handleUploadFiles}
+                  >
                     <Upload size={16} />
                     <span>Upload Files</span>
-                  </button>
-
-                  <button className="adddocs-small adddocs-small--light" type="button">
-                    <FolderOpen size={16} />
-                    <span>View Files</span>
                   </button>
                 </div>
 
@@ -746,6 +856,23 @@ function Dashboard() {
           </div>
         </div>
       )}
+
+
+<AppModal
+  open={modal.open}
+  title={modal.title}
+  message={modal.message}
+  type={modal.type}
+  onCancel={closeModal}
+  onConfirm={() => {
+    const callback = modal.onConfirm;
+    closeModal();
+    if (callback) callback();
+  }}
+/>
+
+
+
     </div>
   );
 }
