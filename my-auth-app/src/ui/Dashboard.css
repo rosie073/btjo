@@ -1281,3 +1281,22 @@ body {
     transform: translateY(0) scale(1);
   }
 }
+
+
+.clear-filters-btn {
+  height: 28px;
+  padding: 0 18px;
+  border: 1px solid #8e98a8;
+  background: #f4eded;
+  color: #1f2d3d;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.2s ease;
+  white-space: nowrap;
+}
+
+.clear-filters-btn:hover {
+  background: #f5f7fb;
+}

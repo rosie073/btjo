@@ -11,6 +11,7 @@ import Documents from "./pages/Documents.jsx";
 import Profile from "./pages/Profile.jsx";
 import Trackingmain from "./pages/Trackingmain.jsx";
 import Trackingdetails from "./pages/Trackingdetails.jsx";
+import NotificationPage from "./pages/NotificationPage.jsx";
 
 export default function App() {
   return (
@@ -60,6 +61,17 @@ export default function App() {
         <Route path="*" element={<Navigate to="/login" replace />} />
         <Route path="/documents" element={<Documents />} />
          <Route path="/profile" element={<Profile />} />
+
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <NotificationPage />
+            </ProtectedRoute>
+          }
+        />
+
+
       </Routes>
     </BrowserRouter>
   );

@@ -7,10 +7,8 @@ import seal from "../assets/logo.jpg";
 import ProfileMenu from "../components/ProfileMenu";
 import AppModal from "../components/AppModal";
 
-
 import {
   Bell,
-  User,
   X,
   Menu,
   Search,
@@ -45,51 +43,16 @@ export default function Documents() {
   const [statusFilter, setStatusFilter] = useState("");
   const [dateRangeFilter, setDateRangeFilter] = useState("");
 
-const [modal, setModal] = useState({
-  open: false,
-  title: "",
-  message: "",
-  type: "alert",
-  onConfirm: null,
-});
-
-function showAlertModal(title, message, callback = null) {
-  setModal({
-    open: true,
-    title,
-    message,
-    type: "alert",
-    onConfirm: callback,
-  });
-}
-
-function showConfirmModal(title, message, callback) {
-  setModal({
-    open: true,
-    title,
-    message,
-    type: "confirm",
-    onConfirm: callback,
-  });
-}
-
-function closeModal() {
-  setModal({
+  const [modal, setModal] = useState({
     open: false,
     title: "",
     message: "",
     type: "alert",
     onConfirm: null,
   });
-}
-
-
 
   const [editingDoc, setEditingDoc] = useState(null);
   const [editForm, setEditForm] = useState({
-
-
-    
     title: "",
     origin: "",
     current: "",
@@ -151,6 +114,36 @@ function closeModal() {
     setDocuments(getDocuments());
   }
 
+  function showAlertModal(title, message, callback = null) {
+    setModal({
+      open: true,
+      title,
+      message,
+      type: "alert",
+      onConfirm: callback,
+    });
+  }
+
+  function showConfirmModal(title, message, callback) {
+    setModal({
+      open: true,
+      title,
+      message,
+      type: "confirm",
+      onConfirm: callback,
+    });
+  }
+
+  function closeModal() {
+    setModal({
+      open: false,
+      title: "",
+      message: "",
+      type: "alert",
+      onConfirm: null,
+    });
+  }
+
   const tabs = [
     "All Files",
     "Pending",
@@ -161,6 +154,7 @@ function closeModal() {
   ];
 
   function parseDate(dateString) {
+    if (!dateString || !dateString.includes("/")) return new Date("");
     const [month, day, year] = dateString.split("/");
     return new Date(`${year}-${month}-${day}`);
   }
@@ -171,7 +165,13 @@ function closeModal() {
     const today = new Date();
     const receivedDate = parseDate(doc.received);
 
-    const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    if (Number.isNaN(receivedDate.getTime())) return false;
+
+    const startOfToday = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    );
 
     switch (range) {
       case "today": {
@@ -239,7 +239,14 @@ function closeModal() {
         matchesDate
       );
     });
-  }, [documents, activeTab, searchTerm, departmentFilter, statusFilter, dateRangeFilter]);
+  }, [
+    documents,
+    activeTab,
+    searchTerm,
+    departmentFilter,
+    statusFilter,
+    dateRangeFilter,
+  ]);
 
   const counts = {
     "All Files": documents.length,
@@ -250,38 +257,37 @@ function closeModal() {
     Incoming: documents.filter((d) => d.status === "Incoming").length,
   };
 
-function onSignOut() {
-  showAlertModal("Sign Out", "Sign out clicked.");
-}
+  function onSignOut() {
+    showAlertModal("Sign Out", "Sign out clicked.");
+  }
 
-function handleDelete(id) {
-  showConfirmModal(
-    "Delete Document",
-    "Are you sure you want to delete this document?",
-    () => {
-      deleteDocument(id);
-      loadDocuments();
-      showAlertModal("Deleted", "Document deleted successfully.");
-    }
-  );
-}
+  function handleDelete(id) {
+    showConfirmModal(
+      "Delete Document",
+      "Are you sure you want to delete this document?",
+      () => {
+        deleteDocument(id);
+        loadDocuments();
+        showAlertModal("Deleted", "Document deleted successfully.");
+      }
+    );
+  }
 
   function handleEditClick(doc) {
     setEditingDoc(doc);
     setEditForm({
-      title: doc.title,
-      origin: doc.origin,
-      current: doc.current,
-      status: doc.status,
-      assign: doc.assign,
-      received: doc.received,
-      updated: doc.updated,
-      days: doc.days,
-      due: doc.due,
+      title: doc.title || "",
+      origin: doc.origin || "",
+      current: doc.current || "",
+      status: doc.status || "",
+      assign: doc.assign || "",
+      received: doc.received || "",
+      updated: doc.updated || "",
+      days: doc.days || 0,
+      due: doc.due || "",
       priority: doc.priority || "Normal",
     });
   }
-
 
   function clearFilters() {
     setSearchTerm("");
@@ -291,29 +297,32 @@ function handleDelete(id) {
     setActiveTab("All Files");
   }
 
+  function handleEditSave() {
+    if (!editingDoc) return;
 
-function handleEditSave() {
-  if (!editingDoc) return;
+    if (
+      !editForm.title ||
+      !editForm.origin ||
+      !editForm.current ||
+      !editForm.status
+    ) {
+      showAlertModal(
+        "Missing Required Fields",
+        "Please complete the required document information before saving."
+      );
+      return;
+    }
 
-  if (!editForm.title || !editForm.origin || !editForm.current || !editForm.status) {
-    showAlertModal(
-      "Missing Required Fields",
-      "Please complete the required document information before saving."
-    );
-    return;
+    updateDocument({
+      ...editingDoc,
+      ...editForm,
+      days: Number(editForm.days) || 0,
+    });
+
+    setEditingDoc(null);
+    loadDocuments();
+    showAlertModal("Success", "Document updated successfully.");
   }
-
-  updateDocument({
-    ...editingDoc,
-    ...editForm,
-    days: Number(editForm.days) || 0,
-  });
-
-  setEditingDoc(null);
-  loadDocuments();
-  showAlertModal("Success", "Document updated successfully.");
-}
-
 
   return (
     <div className="docs-page">
@@ -321,19 +330,26 @@ function handleEditSave() {
         <header className="docs-topbar">
           <div className="docs-topbar-left">
             <img className="docs-seal" src={seal} alt="Seal" />
-            <div className="docs-topbar-title">Municipal Documents Dashboard</div>
+            <div className="docs-topbar-title">
+              Municipal Documents 
+            </div>
           </div>
 
           <div className="docs-topbar-right">
-            <button className="docs-icon-btn" type="button" aria-label="Notifications">
+            <button
+              className="docs-icon-btn"
+              type="button"
+              aria-label="Notifications"
+            >
               <Bell size={18} />
             </button>
-            <button className="docs-icon-btn" type="button" aria-label="User">
-              <User size={18} />
-            </button>
+
+            <ProfileMenu />
+
             <button className="docs-icon-btn" type="button" aria-label="Close">
               <X size={18} />
             </button>
+
             <button
               className="docs-icon-btn"
               type="button"
@@ -410,7 +426,13 @@ function handleEditSave() {
                 <ChevronDown size={14} className="docs-select-icon" />
               </div>
 
-             
+              <button
+                type="button"
+                className="docs-clear-btn"
+                onClick={clearFilters}
+              >
+                Clear Filters
+              </button>
             </div>
           </div>
 
@@ -513,29 +535,42 @@ function handleEditSave() {
 
       {navOpen && (
         <div className="docs-nav-overlay" onClick={() => setNavOpen(false)}>
-          <aside className="docs-right-nav" onClick={(e) => e.stopPropagation()}>
+          <aside
+            className="docs-right-nav"
+            onClick={(e) => e.stopPropagation()}
+          >
             <nav className="docs-nav-list">
-              <button className="docs-nav-item" onClick={() => navigate("/dashboard")}>
+              <button
+                className="docs-nav-item"
+                onClick={() => navigate("/dashboard")}
+              >
                 <span className="docs-nav-ico">
                   <LayoutDashboard size={16} />
                 </span>
                 Dashboard
               </button>
 
-              <button className="docs-nav-item active" onClick={() => navigate("/documents")}>
+              <button
+                className="docs-nav-item active"
+                onClick={() => navigate("/documents")}
+              >
                 <span className="docs-nav-ico">
                   <Files size={16} />
                 </span>
                 Documents
               </button>
-           <button className="docs-nav-item">
+
+              <button className="docs-nav-item">
                 <span className="docs-nav-ico">
                   <MapPinned size={16} />
                 </span>
                 Tracking
               </button>
 
-              <button className="docs-nav-item">
+              <button
+                className="docs-nav-item"
+                onClick={() => navigate("/notifications")}
+              >
                 <span className="docs-nav-ico">
                   <Bell size={16} />
                 </span>
@@ -609,22 +644,30 @@ function handleEditSave() {
             <div style={{ display: "grid", gap: "12px" }}>
               <input
                 value={editForm.title}
-                onChange={(e) => setEditForm((p) => ({ ...p, title: e.target.value }))}
+                onChange={(e) =>
+                  setEditForm((p) => ({ ...p, title: e.target.value }))
+                }
                 placeholder="Document Title"
               />
               <input
                 value={editForm.origin}
-                onChange={(e) => setEditForm((p) => ({ ...p, origin: e.target.value }))}
+                onChange={(e) =>
+                  setEditForm((p) => ({ ...p, origin: e.target.value }))
+                }
                 placeholder="Origin Department"
               />
               <input
                 value={editForm.current}
-                onChange={(e) => setEditForm((p) => ({ ...p, current: e.target.value }))}
+                onChange={(e) =>
+                  setEditForm((p) => ({ ...p, current: e.target.value }))
+                }
                 placeholder="Current Department"
               />
               <select
                 value={editForm.status}
-                onChange={(e) => setEditForm((p) => ({ ...p, status: e.target.value }))}
+                onChange={(e) =>
+                  setEditForm((p) => ({ ...p, status: e.target.value }))
+                }
               >
                 {statuses.map((status) => (
                   <option key={status} value={status}>
@@ -634,28 +677,38 @@ function handleEditSave() {
               </select>
               <input
                 value={editForm.assign}
-                onChange={(e) => setEditForm((p) => ({ ...p, assign: e.target.value }))}
+                onChange={(e) =>
+                  setEditForm((p) => ({ ...p, assign: e.target.value }))
+                }
                 placeholder="Assign To"
               />
               <input
                 value={editForm.received}
-                onChange={(e) => setEditForm((p) => ({ ...p, received: e.target.value }))}
+                onChange={(e) =>
+                  setEditForm((p) => ({ ...p, received: e.target.value }))
+                }
                 placeholder="Received Date (MM/DD/YYYY)"
               />
               <input
                 value={editForm.updated}
-                onChange={(e) => setEditForm((p) => ({ ...p, updated: e.target.value }))}
+                onChange={(e) =>
+                  setEditForm((p) => ({ ...p, updated: e.target.value }))
+                }
                 placeholder="Last Update (MM/DD/YYYY)"
               />
               <input
                 value={editForm.due}
-                onChange={(e) => setEditForm((p) => ({ ...p, due: e.target.value }))}
+                onChange={(e) =>
+                  setEditForm((p) => ({ ...p, due: e.target.value }))
+                }
                 placeholder="Due Date (MM/DD/YYYY)"
               />
               <input
                 type="number"
                 value={editForm.days}
-                onChange={(e) => setEditForm((p) => ({ ...p, days: e.target.value }))}
+                onChange={(e) =>
+                  setEditForm((p) => ({ ...p, days: e.target.value }))
+                }
                 placeholder="Days In Department"
               />
             </div>
@@ -675,24 +728,18 @@ function handleEditSave() {
         </div>
       )}
 
-
-<AppModal
-  open={modal.open}
-  title={modal.title}
-  message={modal.message}
-  type={modal.type}
-  onCancel={closeModal}
-  onConfirm={() => {
-    const callback = modal.onConfirm;
-    closeModal();
-    if (callback) callback();
-  }}
-/>
-
-
-
-
-
+      <AppModal
+        open={modal.open}
+        title={modal.title}
+        message={modal.message}
+        type={modal.type}
+        onCancel={closeModal}
+        onConfirm={() => {
+          const callback = modal.onConfirm;
+          closeModal();
+          if (callback) callback();
+        }}
+      />
     </div>
   );
 }

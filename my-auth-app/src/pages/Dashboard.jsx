@@ -51,34 +51,32 @@ function Dashboard() {
   const navigate = useNavigate();
 
   const [modal, setModal] = useState({
-  open: false,
-  title: "",
-  message: "",
-  type: "alert",
-  onConfirm: null,
-});
-
-function showAlertModal(title, message, callback = null) {
-  setModal({
-    open: true,
-    title,
-    message,
-    type: "alert",
-    onConfirm: callback,
-  });
-}
-
-function closeModal() {
-  setModal({
     open: false,
     title: "",
     message: "",
     type: "alert",
     onConfirm: null,
   });
-}
 
+  function showAlertModal(title, message, callback = null) {
+    setModal({
+      open: true,
+      title,
+      message,
+      type: "alert",
+      onConfirm: callback,
+    });
+  }
 
+  function closeModal() {
+    setModal({
+      open: false,
+      title: "",
+      message: "",
+      type: "alert",
+      onConfirm: null,
+    });
+  }
 
   const departments = [
     "Mayor",
@@ -113,12 +111,14 @@ function closeModal() {
 
   const statuses = ["Pending", "Declined", "Returned", "Completed", "Incoming"];
 
-  const [filters, setFilters] = useState({
+  const initialFilters = {
     search: "",
     department: "",
     status: "",
     dateRange: "",
-  });
+  };
+
+  const [filters, setFilters] = useState(initialFilters);
 
   const [docForm, setDocForm] = useState({
     search: "",
@@ -151,13 +151,18 @@ function closeModal() {
   const stats = useMemo(() => {
     const total = documents.length;
     const inProgress = documents.filter(
-      (d) => d.status === "Pending" || d.status === "Incoming" || d.status === "Returned"
+      (d) =>
+        d.status === "Pending" ||
+        d.status === "Incoming" ||
+        d.status === "Returned"
     ).length;
     const completed = documents.filter((d) => d.status === "Completed").length;
 
     const today = new Date();
     const overdue = documents.filter((d) => parseDate(d.due) < today).length;
-    const urgent = documents.filter((d) => d.priority === "Urgent" || d.priority === "High").length;
+    const urgent = documents.filter(
+      (d) => d.priority === "Urgent" || d.priority === "High"
+    ).length;
     const alert = documents.filter((d) => d.status === "Declined").length;
 
     return [
@@ -241,9 +246,9 @@ function closeModal() {
     { label: "Approved by Budget Office", date: "02/10/2026", type: "ok" },
   ];
 
-function onSignOut() {
-  showAlertModal("Sign Out", "Sign out clicked.");
-}
+  function onSignOut() {
+    showAlertModal("Sign Out", "Sign out clicked.");
+  }
 
   function handleDocChange(key, value) {
     setDocForm((prev) => ({ ...prev, [key]: value }));
@@ -255,60 +260,64 @@ function onSignOut() {
     return `${month}/${day}/${year}`;
   }
 
-function handleSaveDoc() {
-  if (
-    !docForm.documentType ||
-    !docForm.applicationName ||
-    !docForm.originDepartment
-  ) {
-    showAlertModal(
-      "Missing Required Fields",
-      "Please fill in Document Type, Application Name, and Origin Department."
-    );
-    return;
+  function handleSaveDoc() {
+    if (
+      !docForm.documentType ||
+      !docForm.applicationName ||
+      !docForm.originDepartment
+    ) {
+      showAlertModal(
+        "Missing Required Fields",
+        "Please fill in Document Type, Application Name, and Origin Department."
+      );
+      return;
+    }
+
+    const displayDate = formatInputDateToDisplay(docForm.date);
+
+    const newDocument = {
+      id: generateDocId(),
+      title: docForm.applicationName,
+      origin: docForm.originDepartment,
+      current: docForm.originDepartment,
+      status: "Incoming",
+      assign: "Unassigned",
+      received: displayDate,
+      updated: displayDate,
+      days: 0,
+      due: displayDate,
+      priority: docForm.priorityLevel,
+      documentType: docForm.documentType,
+      files: uploadedFiles.map((file) => ({
+        name: file.name,
+        size: file.size,
+      })),
+    };
+
+    addDocument(newDocument);
+
+    setDocForm({
+      search: "",
+      documentType: "",
+      applicationName: "",
+      originDepartment: "",
+      priorityLabel: "Priority",
+      priorityLevel: "Normal",
+      date: new Date().toISOString().split("T")[0],
+    });
+    setUploadedFiles([]);
+    setShowAddDocs(false);
+    loadDocuments();
+
+    showAlertModal("Success", "Document saved successfully.");
   }
-
-  const displayDate = formatInputDateToDisplay(docForm.date);
-
-  const newDocument = {
-    id: generateDocId(),
-    title: docForm.applicationName,
-    origin: docForm.originDepartment,
-    current: docForm.originDepartment,
-    status: "Incoming",
-    assign: "Unassigned",
-    received: displayDate,
-    updated: displayDate,
-    days: 0,
-    due: displayDate,
-    priority: docForm.priorityLevel,
-    documentType: docForm.documentType,
-    files: uploadedFiles.map((file) => ({
-      name: file.name,
-      size: file.size,
-    })),
-  };
-
-  addDocument(newDocument);
-
-  setDocForm({
-    search: "",
-    documentType: "",
-    applicationName: "",
-    originDepartment: "",
-    priorityLabel: "Priority",
-    priorityLevel: "Normal",
-    date: new Date().toISOString().split("T")[0],
-  });
-  setUploadedFiles([]);
-  setShowAddDocs(false);
-  loadDocuments();
-
-  showAlertModal("Success", "Document saved successfully.");
-}
 
   function handleFilterChange(key, value) {
     setFilters((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function handleClearFilters() {
+    setFilters(initialFilters);
   }
 
   function handleUploadFiles() {
@@ -324,7 +333,9 @@ function handleSaveDoc() {
   }
 
   function handleRemoveFile(indexToRemove) {
-    setUploadedFiles((prev) => prev.filter((_, index) => index !== indexToRemove));
+    setUploadedFiles((prev) =>
+      prev.filter((_, index) => index !== indexToRemove)
+    );
   }
 
   function formatFileSize(size) {
@@ -483,6 +494,14 @@ function handleSaveDoc() {
                 <option value="30days">Next 30 Days</option>
                 <option value="overdue">Overdue</option>
               </select>
+
+              <button
+                type="button"
+                className="clear-filters-btn"
+                onClick={handleClearFilters}
+              >
+                Clear Filters
+              </button>
             </div>
           </div>
 
@@ -617,7 +636,10 @@ function handleSaveDoc() {
                 Tracking
               </button>
 
-              <button className="nav-item">
+              <button
+                className="nav-item"
+                onClick={() => navigate("/notifications")}
+              >
                 <span className="nav-ico">
                   <Bell size={16} strokeWidth={2.2} />
                 </span>
@@ -857,22 +879,18 @@ function handleSaveDoc() {
         </div>
       )}
 
-
-<AppModal
-  open={modal.open}
-  title={modal.title}
-  message={modal.message}
-  type={modal.type}
-  onCancel={closeModal}
-  onConfirm={() => {
-    const callback = modal.onConfirm;
-    closeModal();
-    if (callback) callback();
-  }}
-/>
-
-
-
+      <AppModal
+        open={modal.open}
+        title={modal.title}
+        message={modal.message}
+        type={modal.type}
+        onCancel={closeModal}
+        onConfirm={() => {
+          const callback = modal.onConfirm;
+          closeModal();
+          if (callback) callback();
+        }}
+      />
     </div>
   );
 }
