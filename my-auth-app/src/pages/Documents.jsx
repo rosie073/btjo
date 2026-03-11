@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import "../ui/Documents.css";
 
 import seal from "../assets/logo.jpg";
@@ -7,10 +7,8 @@ import seal from "../assets/logo.jpg";
 import ProfileMenu from "../components/ProfileMenu";
 import AppModal from "../components/AppModal";
 
-
 import {
   Bell,
-  User,
   X,
   Menu,
   Search,
@@ -36,6 +34,8 @@ import {
 
 export default function Documents() {
   const navigate = useNavigate();
+  const location = useLocation();
+
   const [navOpen, setNavOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("All Files");
   const [documents, setDocuments] = useState([]);
@@ -45,51 +45,16 @@ export default function Documents() {
   const [statusFilter, setStatusFilter] = useState("");
   const [dateRangeFilter, setDateRangeFilter] = useState("");
 
-const [modal, setModal] = useState({
-  open: false,
-  title: "",
-  message: "",
-  type: "alert",
-  onConfirm: null,
-});
-
-function showAlertModal(title, message, callback = null) {
-  setModal({
-    open: true,
-    title,
-    message,
-    type: "alert",
-    onConfirm: callback,
-  });
-}
-
-function showConfirmModal(title, message, callback) {
-  setModal({
-    open: true,
-    title,
-    message,
-    type: "confirm",
-    onConfirm: callback,
-  });
-}
-
-function closeModal() {
-  setModal({
+  const [modal, setModal] = useState({
     open: false,
     title: "",
     message: "",
     type: "alert",
     onConfirm: null,
   });
-}
-
-
 
   const [editingDoc, setEditingDoc] = useState(null);
   const [editForm, setEditForm] = useState({
-
-
-    
     title: "",
     origin: "",
     current: "",
@@ -151,6 +116,36 @@ function closeModal() {
     setDocuments(getDocuments());
   }
 
+  function showAlertModal(title, message, callback = null) {
+    setModal({
+      open: true,
+      title,
+      message,
+      type: "alert",
+      onConfirm: callback,
+    });
+  }
+
+  function showConfirmModal(title, message, callback) {
+    setModal({
+      open: true,
+      title,
+      message,
+      type: "confirm",
+      onConfirm: callback,
+    });
+  }
+
+  function closeModal() {
+    setModal({
+      open: false,
+      title: "",
+      message: "",
+      type: "alert",
+      onConfirm: null,
+    });
+  }
+
   const tabs = [
     "All Files",
     "Pending",
@@ -161,6 +156,7 @@ function closeModal() {
   ];
 
   function parseDate(dateString) {
+    if (!dateString || !dateString.includes("/")) return new Date("");
     const [month, day, year] = dateString.split("/");
     return new Date(`${year}-${month}-${day}`);
   }
@@ -171,31 +167,39 @@ function closeModal() {
     const today = new Date();
     const receivedDate = parseDate(doc.received);
 
-    const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    if (Number.isNaN(receivedDate.getTime())) return false;
+
+    const startOfToday = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    );
 
     switch (range) {
-      case "today": {
+      case "today":
         return receivedDate.toDateString() === startOfToday.toDateString();
-      }
+
       case "last7days": {
         const last7 = new Date(startOfToday);
         last7.setDate(startOfToday.getDate() - 7);
         return receivedDate >= last7 && receivedDate <= today;
       }
+
       case "last30days": {
         const last30 = new Date(startOfToday);
         last30.setDate(startOfToday.getDate() - 30);
         return receivedDate >= last30 && receivedDate <= today;
       }
-      case "thisMonth": {
+
+      case "thisMonth":
         return (
           receivedDate.getMonth() === today.getMonth() &&
           receivedDate.getFullYear() === today.getFullYear()
         );
-      }
-      case "thisYear": {
+
+      case "thisYear":
         return receivedDate.getFullYear() === today.getFullYear();
-      }
+
       default:
         return true;
     }
@@ -239,7 +243,14 @@ function closeModal() {
         matchesDate
       );
     });
-  }, [documents, activeTab, searchTerm, departmentFilter, statusFilter, dateRangeFilter]);
+  }, [
+    documents,
+    activeTab,
+    searchTerm,
+    departmentFilter,
+    statusFilter,
+    dateRangeFilter,
+  ]);
 
   const counts = {
     "All Files": documents.length,
@@ -250,38 +261,37 @@ function closeModal() {
     Incoming: documents.filter((d) => d.status === "Incoming").length,
   };
 
-function onSignOut() {
-  showAlertModal("Sign Out", "Sign out clicked.");
-}
+  function onSignOut() {
+    showAlertModal("Sign Out", "Sign out clicked.");
+  }
 
-function handleDelete(id) {
-  showConfirmModal(
-    "Delete Document",
-    "Are you sure you want to delete this document?",
-    () => {
-      deleteDocument(id);
-      loadDocuments();
-      showAlertModal("Deleted", "Document deleted successfully.");
-    }
-  );
-}
+  function handleDelete(id) {
+    showConfirmModal(
+      "Delete Document",
+      "Are you sure you want to delete this document?",
+      () => {
+        deleteDocument(id);
+        loadDocuments();
+        showAlertModal("Deleted", "Document deleted successfully.");
+      }
+    );
+  }
 
   function handleEditClick(doc) {
     setEditingDoc(doc);
     setEditForm({
-      title: doc.title,
-      origin: doc.origin,
-      current: doc.current,
-      status: doc.status,
-      assign: doc.assign,
-      received: doc.received,
-      updated: doc.updated,
-      days: doc.days,
-      due: doc.due,
+      title: doc.title || "",
+      origin: doc.origin || "",
+      current: doc.current || "",
+      status: doc.status || "",
+      assign: doc.assign || "",
+      received: doc.received || "",
+      updated: doc.updated || "",
+      days: doc.days || 0,
+      due: doc.due || "",
       priority: doc.priority || "Normal",
     });
   }
-
 
   function clearFilters() {
     setSearchTerm("");
@@ -291,29 +301,39 @@ function handleDelete(id) {
     setActiveTab("All Files");
   }
 
+  function handleEditSave() {
+    if (!editingDoc) return;
 
-function handleEditSave() {
-  if (!editingDoc) return;
+    if (
+      !editForm.title ||
+      !editForm.origin ||
+      !editForm.current ||
+      !editForm.status
+    ) {
+      showAlertModal(
+        "Missing Required Fields",
+        "Please complete the required document information before saving."
+      );
+      return;
+    }
 
-  if (!editForm.title || !editForm.origin || !editForm.current || !editForm.status) {
-    showAlertModal(
-      "Missing Required Fields",
-      "Please complete the required document information before saving."
-    );
-    return;
+    updateDocument({
+      ...editingDoc,
+      ...editForm,
+      days: Number(editForm.days) || 0,
+    });
+
+    setEditingDoc(null);
+    loadDocuments();
+    showAlertModal("Success", "Document updated successfully.");
   }
 
-  updateDocument({
-    ...editingDoc,
-    ...editForm,
-    days: Number(editForm.days) || 0,
-  });
-
-  setEditingDoc(null);
-  loadDocuments();
-  showAlertModal("Success", "Document updated successfully.");
-}
-
+  function isActive(path) {
+    if (path === "/dashboard") {
+      return location.pathname === "/" || location.pathname === "/dashboard";
+    }
+    return location.pathname === path || location.pathname.startsWith(`${path}/`);
+  }
 
   return (
     <div className="docs-page">
@@ -321,19 +341,29 @@ function handleEditSave() {
         <header className="docs-topbar">
           <div className="docs-topbar-left">
             <img className="docs-seal" src={seal} alt="Seal" />
-            <div className="docs-topbar-title">Municipal Documents Dashboard</div>
+            <div className="docs-topbar-title">Municipal Documents</div>
           </div>
 
           <div className="docs-topbar-right">
-            <button className="docs-icon-btn" type="button" aria-label="Notifications">
+            <button
+              className="docs-icon-btn"
+              type="button"
+              aria-label="Notifications"
+              onClick={() => navigate("/notifications")}
+            >
               <Bell size={18} />
             </button>
+<<<<<<< HEAD
             
+=======
+
+>>>>>>> 6e5370feb4383af4ae3ad56e5189f8ada7746478
             <ProfileMenu />
 
             <button className="docs-icon-btn" type="button" aria-label="Close">
               <X size={18} />
             </button>
+
             <button
               className="docs-icon-btn"
               type="button"
@@ -410,7 +440,13 @@ function handleEditSave() {
                 <ChevronDown size={14} className="docs-select-icon" />
               </div>
 
-             
+              <button
+                type="button"
+                className="docs-clear-btn"
+                onClick={clearFilters}
+              >
+                Clear Filters
+              </button>
             </div>
           </div>
 
@@ -512,22 +548,33 @@ function handleEditSave() {
       </div>
 
       {navOpen && (
-        <div className="docs-nav-overlay" onClick={() => setNavOpen(false)}>
-          <aside className="docs-right-nav" onClick={(e) => e.stopPropagation()}>
-            <nav className="docs-nav-list">
-              <button className="docs-nav-item" onClick={() => navigate("/dashboard")}>
-                <span className="docs-nav-ico">
-                  <LayoutDashboard size={16} />
+        <div className="nav-overlay" onClick={() => setNavOpen(false)}>
+          <aside className="right-nav" onClick={(e) => e.stopPropagation()}>
+            <button className="nav-close" onClick={() => setNavOpen(false)}>
+              <X size={18} strokeWidth={2.2} />
+            </button>
+
+            <nav className="nav-list">
+              <button
+                className={`nav-item ${isActive("/dashboard") ? "active" : ""}`}
+                onClick={() => navigate("/dashboard")}
+              >
+                <span className="nav-ico">
+                  <LayoutDashboard size={16} strokeWidth={2.2} />
                 </span>
                 Dashboard
               </button>
 
-              <button className="docs-nav-item active" onClick={() => navigate("/documents")}>
-                <span className="docs-nav-ico">
-                  <Files size={16} />
+              <button
+                className={`nav-item ${isActive("/documents") ? "active" : ""}`}
+                onClick={() => navigate("/documents")}
+              >
+                <span className="nav-ico">
+                  <Files size={16} strokeWidth={2.2} />
                 </span>
                 Documents
               </button>
+<<<<<<< HEAD
           <button
               className="nav-item"
               onClick={() => {
@@ -540,46 +587,77 @@ function handleEditSave() {
               </span>
               Tracking
             </button>
+=======
 
-              <button className="docs-nav-item">
-                <span className="docs-nav-ico">
-                  <Bell size={16} />
+              <button
+                className={`nav-item ${isActive("/tracking") ? "active" : ""}`}
+                onClick={() => navigate("/tracking")}
+              >
+                <span className="nav-ico">
+                  <MapPinned size={16} strokeWidth={2.2} />
+                </span>
+                Tracking
+              </button>
+>>>>>>> 6e5370feb4383af4ae3ad56e5189f8ada7746478
+
+              <button
+                className={`nav-item ${
+                  isActive("/notifications") ? "active" : ""
+                }`}
+                onClick={() => navigate("/notifications")}
+              >
+                <span className="nav-ico">
+                  <Bell size={16} strokeWidth={2.2} />
                 </span>
                 Notification
               </button>
 
-              <button className="docs-nav-item">
-                <span className="docs-nav-ico">
-                  <Building2 size={16} />
+              <button
+                className={`nav-item ${
+                  isActive("/departments") ? "active" : ""
+                }`}
+                onClick={() => navigate("/departments")}
+              >
+                <span className="nav-ico">
+                  <Building2 size={16} strokeWidth={2.2} />
                 </span>
                 Departments
               </button>
 
-              <button className="docs-nav-item">
-                <span className="docs-nav-ico">
-                  <BarChart3 size={16} />
+              <button
+                className={`nav-item ${isActive("/reports") ? "active" : ""}`}
+                onClick={() => navigate("/reports")}
+              >
+                <span className="nav-ico">
+                  <BarChart3 size={16} strokeWidth={2.2} />
                 </span>
                 Reports &amp; Analytics
               </button>
 
-              <button className="docs-nav-item">
-                <span className="docs-nav-ico">
-                  <Settings size={16} />
+              <button
+                className={`nav-item ${isActive("/settings") ? "active" : ""}`}
+                onClick={() => navigate("/settings")}
+              >
+                <span className="nav-ico">
+                  <Settings size={16} strokeWidth={2.2} />
                 </span>
                 Settings
               </button>
 
-              <button className="docs-nav-item">
-                <span className="docs-nav-ico">
-                  <CircleHelp size={16} />
+              <button
+                className={`nav-item ${isActive("/help") ? "active" : ""}`}
+                onClick={() => navigate("/help")}
+              >
+                <span className="nav-ico">
+                  <CircleHelp size={16} strokeWidth={2.2} />
                 </span>
                 Help
               </button>
             </nav>
 
-            <div className="docs-nav-footer">
-              <button className="docs-nav-signout" onClick={onSignOut}>
-                <LogOut size={16} />
+            <div className="nav-footer">
+              <button className="nav-signout" onClick={onSignOut}>
+                <LogOut size={16} strokeWidth={2.2} />
                 <span>Sign out</span>
               </button>
             </div>
@@ -615,22 +693,30 @@ function handleEditSave() {
             <div style={{ display: "grid", gap: "12px" }}>
               <input
                 value={editForm.title}
-                onChange={(e) => setEditForm((p) => ({ ...p, title: e.target.value }))}
+                onChange={(e) =>
+                  setEditForm((p) => ({ ...p, title: e.target.value }))
+                }
                 placeholder="Document Title"
               />
               <input
                 value={editForm.origin}
-                onChange={(e) => setEditForm((p) => ({ ...p, origin: e.target.value }))}
+                onChange={(e) =>
+                  setEditForm((p) => ({ ...p, origin: e.target.value }))
+                }
                 placeholder="Origin Department"
               />
               <input
                 value={editForm.current}
-                onChange={(e) => setEditForm((p) => ({ ...p, current: e.target.value }))}
+                onChange={(e) =>
+                  setEditForm((p) => ({ ...p, current: e.target.value }))
+                }
                 placeholder="Current Department"
               />
               <select
                 value={editForm.status}
-                onChange={(e) => setEditForm((p) => ({ ...p, status: e.target.value }))}
+                onChange={(e) =>
+                  setEditForm((p) => ({ ...p, status: e.target.value }))
+                }
               >
                 {statuses.map((status) => (
                   <option key={status} value={status}>
@@ -640,28 +726,38 @@ function handleEditSave() {
               </select>
               <input
                 value={editForm.assign}
-                onChange={(e) => setEditForm((p) => ({ ...p, assign: e.target.value }))}
+                onChange={(e) =>
+                  setEditForm((p) => ({ ...p, assign: e.target.value }))
+                }
                 placeholder="Assign To"
               />
               <input
                 value={editForm.received}
-                onChange={(e) => setEditForm((p) => ({ ...p, received: e.target.value }))}
+                onChange={(e) =>
+                  setEditForm((p) => ({ ...p, received: e.target.value }))
+                }
                 placeholder="Received Date (MM/DD/YYYY)"
               />
               <input
                 value={editForm.updated}
-                onChange={(e) => setEditForm((p) => ({ ...p, updated: e.target.value }))}
+                onChange={(e) =>
+                  setEditForm((p) => ({ ...p, updated: e.target.value }))
+                }
                 placeholder="Last Update (MM/DD/YYYY)"
               />
               <input
                 value={editForm.due}
-                onChange={(e) => setEditForm((p) => ({ ...p, due: e.target.value }))}
+                onChange={(e) =>
+                  setEditForm((p) => ({ ...p, due: e.target.value }))
+                }
                 placeholder="Due Date (MM/DD/YYYY)"
               />
               <input
                 type="number"
                 value={editForm.days}
-                onChange={(e) => setEditForm((p) => ({ ...p, days: e.target.value }))}
+                onChange={(e) =>
+                  setEditForm((p) => ({ ...p, days: e.target.value }))
+                }
                 placeholder="Days In Department"
               />
             </div>
@@ -681,24 +777,18 @@ function handleEditSave() {
         </div>
       )}
 
-
-<AppModal
-  open={modal.open}
-  title={modal.title}
-  message={modal.message}
-  type={modal.type}
-  onCancel={closeModal}
-  onConfirm={() => {
-    const callback = modal.onConfirm;
-    closeModal();
-    if (callback) callback();
-  }}
-/>
-
-
-
-
-
+      <AppModal
+        open={modal.open}
+        title={modal.title}
+        message={modal.message}
+        type={modal.type}
+        onCancel={closeModal}
+        onConfirm={() => {
+          const callback = modal.onConfirm;
+          closeModal();
+          if (callback) callback();
+        }}
+      />
     </div>
   );
 }
