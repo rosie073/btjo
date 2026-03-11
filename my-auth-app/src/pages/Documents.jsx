@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import "../ui/Documents.css";
 
 import seal from "../assets/logo.jpg";
@@ -34,6 +34,8 @@ import {
 
 export default function Documents() {
   const navigate = useNavigate();
+  const location = useLocation();
+
   const [navOpen, setNavOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("All Files");
   const [documents, setDocuments] = useState([]);
@@ -174,28 +176,30 @@ export default function Documents() {
     );
 
     switch (range) {
-      case "today": {
+      case "today":
         return receivedDate.toDateString() === startOfToday.toDateString();
-      }
+
       case "last7days": {
         const last7 = new Date(startOfToday);
         last7.setDate(startOfToday.getDate() - 7);
         return receivedDate >= last7 && receivedDate <= today;
       }
+
       case "last30days": {
         const last30 = new Date(startOfToday);
         last30.setDate(startOfToday.getDate() - 30);
         return receivedDate >= last30 && receivedDate <= today;
       }
-      case "thisMonth": {
+
+      case "thisMonth":
         return (
           receivedDate.getMonth() === today.getMonth() &&
           receivedDate.getFullYear() === today.getFullYear()
         );
-      }
-      case "thisYear": {
+
+      case "thisYear":
         return receivedDate.getFullYear() === today.getFullYear();
-      }
+
       default:
         return true;
     }
@@ -324,15 +328,20 @@ export default function Documents() {
     showAlertModal("Success", "Document updated successfully.");
   }
 
+  function isActive(path) {
+    if (path === "/dashboard") {
+      return location.pathname === "/" || location.pathname === "/dashboard";
+    }
+    return location.pathname === path || location.pathname.startsWith(`${path}/`);
+  }
+
   return (
     <div className="docs-page">
       <div className="docs-shell">
         <header className="docs-topbar">
           <div className="docs-topbar-left">
             <img className="docs-seal" src={seal} alt="Seal" />
-            <div className="docs-topbar-title">
-              Municipal Documents 
-            </div>
+            <div className="docs-topbar-title">Municipal Documents</div>
           </div>
 
           <div className="docs-topbar-right">
@@ -340,6 +349,7 @@ export default function Documents() {
               className="docs-icon-btn"
               type="button"
               aria-label="Notifications"
+              onClick={() => navigate("/notifications")}
             >
               <Bell size={18} />
             </button>
@@ -534,81 +544,101 @@ export default function Documents() {
       </div>
 
       {navOpen && (
-        <div className="docs-nav-overlay" onClick={() => setNavOpen(false)}>
-          <aside
-            className="docs-right-nav"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <nav className="docs-nav-list">
+        <div className="nav-overlay" onClick={() => setNavOpen(false)}>
+          <aside className="right-nav" onClick={(e) => e.stopPropagation()}>
+            <button className="nav-close" onClick={() => setNavOpen(false)}>
+              <X size={18} strokeWidth={2.2} />
+            </button>
+
+            <nav className="nav-list">
               <button
-                className="docs-nav-item"
+                className={`nav-item ${isActive("/dashboard") ? "active" : ""}`}
                 onClick={() => navigate("/dashboard")}
               >
-                <span className="docs-nav-ico">
-                  <LayoutDashboard size={16} />
+                <span className="nav-ico">
+                  <LayoutDashboard size={16} strokeWidth={2.2} />
                 </span>
                 Dashboard
               </button>
 
               <button
-                className="docs-nav-item active"
+                className={`nav-item ${isActive("/documents") ? "active" : ""}`}
                 onClick={() => navigate("/documents")}
               >
-                <span className="docs-nav-ico">
-                  <Files size={16} />
+                <span className="nav-ico">
+                  <Files size={16} strokeWidth={2.2} />
                 </span>
                 Documents
               </button>
 
-              <button className="docs-nav-item">
-                <span className="docs-nav-ico">
-                  <MapPinned size={16} />
+              <button
+                className={`nav-item ${isActive("/tracking") ? "active" : ""}`}
+                onClick={() => navigate("/tracking")}
+              >
+                <span className="nav-ico">
+                  <MapPinned size={16} strokeWidth={2.2} />
                 </span>
                 Tracking
               </button>
 
               <button
-                className="docs-nav-item"
+                className={`nav-item ${
+                  isActive("/notifications") ? "active" : ""
+                }`}
                 onClick={() => navigate("/notifications")}
               >
-                <span className="docs-nav-ico">
-                  <Bell size={16} />
+                <span className="nav-ico">
+                  <Bell size={16} strokeWidth={2.2} />
                 </span>
                 Notification
               </button>
 
-              <button className="docs-nav-item">
-                <span className="docs-nav-ico">
-                  <Building2 size={16} />
+              <button
+                className={`nav-item ${
+                  isActive("/departments") ? "active" : ""
+                }`}
+                onClick={() => navigate("/departments")}
+              >
+                <span className="nav-ico">
+                  <Building2 size={16} strokeWidth={2.2} />
                 </span>
                 Departments
               </button>
 
-              <button className="docs-nav-item">
-                <span className="docs-nav-ico">
-                  <BarChart3 size={16} />
+              <button
+                className={`nav-item ${isActive("/reports") ? "active" : ""}`}
+                onClick={() => navigate("/reports")}
+              >
+                <span className="nav-ico">
+                  <BarChart3 size={16} strokeWidth={2.2} />
                 </span>
                 Reports &amp; Analytics
               </button>
 
-              <button className="docs-nav-item">
-                <span className="docs-nav-ico">
-                  <Settings size={16} />
+              <button
+                className={`nav-item ${isActive("/settings") ? "active" : ""}`}
+                onClick={() => navigate("/settings")}
+              >
+                <span className="nav-ico">
+                  <Settings size={16} strokeWidth={2.2} />
                 </span>
                 Settings
               </button>
 
-              <button className="docs-nav-item">
-                <span className="docs-nav-ico">
-                  <CircleHelp size={16} />
+              <button
+                className={`nav-item ${isActive("/help") ? "active" : ""}`}
+                onClick={() => navigate("/help")}
+              >
+                <span className="nav-ico">
+                  <CircleHelp size={16} strokeWidth={2.2} />
                 </span>
                 Help
               </button>
             </nav>
 
-            <div className="docs-nav-footer">
-              <button className="docs-nav-signout" onClick={onSignOut}>
-                <LogOut size={16} />
+            <div className="nav-footer">
+              <button className="nav-signout" onClick={onSignOut}>
+                <LogOut size={16} strokeWidth={2.2} />
                 <span>Sign out</span>
               </button>
             </div>

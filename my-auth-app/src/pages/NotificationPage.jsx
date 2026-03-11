@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import "../ui/NotificationPage.css";
 import seal from "../assets/logo.jpg";
 import ProfileMenu from "../components/ProfileMenu";
@@ -13,6 +13,7 @@ import {
   Printer,
   AlertCircle,
   CheckCircle2,
+  Check,
   X,
   Menu,
   LayoutDashboard,
@@ -30,6 +31,7 @@ import { getDocuments, seedDocuments } from "../data/documentStore";
 
 export default function NotificationPage() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [navOpen, setNavOpen] = useState(false);
   const [documents, setDocuments] = useState([]);
@@ -67,12 +69,12 @@ export default function NotificationPage() {
     return new Date(`${year}-${month}-${day}`);
   }
 
-  function showAlertModal(title, message, callback = null) {
+  function showAlertModal(title, message, callback = null, type = "alert") {
     setModal({
       open: true,
       title,
       message,
-      type: "alert",
+      type,
       onConfirm: callback,
     });
   }
@@ -88,11 +90,17 @@ export default function NotificationPage() {
   }
 
   function onSignOut() {
-    showAlertModal("Sign Out", "Sign out clicked.");
+    showAlertModal(
+      "Sign Out",
+      "You have selected to sign out of the system.",
+      null,
+      "alert"
+    );
   }
 
   const notifications = useMemo(() => {
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
     return documents.flatMap((doc) => {
       const items = [];
@@ -128,7 +136,7 @@ export default function NotificationPage() {
           id: `${doc.id}-completed`,
           docId: doc.id,
           title: "Approved",
-          message: `${doc.title} has been approved/completed.`,
+          message: `${doc.title} has been approved and completed successfully.`,
           type: "success",
           status: "Completed",
           date: doc.updated || doc.received,
@@ -152,7 +160,7 @@ export default function NotificationPage() {
           id: `${doc.id}-pending`,
           docId: doc.id,
           title: "Follow-Up Required",
-          message: `${doc.title} still needs follow-up action to continue processing.`,
+          message: `${doc.title} still requires follow-up action to continue processing.`,
           type: "warning",
           status: "Pending",
           date: doc.updated || doc.received,
@@ -164,7 +172,7 @@ export default function NotificationPage() {
           id: `${doc.id}-declined`,
           docId: doc.id,
           title: "Document Declined",
-          message: `${doc.title} was declined. Please review the document status and next steps.`,
+          message: `${doc.title} was declined. Please review the document status and recommended next steps.`,
           type: "danger",
           status: "Declined",
           date: doc.updated || doc.received,
@@ -195,59 +203,133 @@ export default function NotificationPage() {
 
   function handleMarkSelectedRead() {
     if (selected.length === 0) {
-      showAlertModal("No Selection", "Please select at least one notification.");
+      showAlertModal(
+        "No Selection",
+        "Please select at least one notification to mark as read."
+      );
       return;
     }
 
     setReadIds((prev) => [...new Set([...prev, ...selected])]);
     setSelected([]);
-    showAlertModal("Success", "Selected notifications marked as read.");
+    showAlertModal(
+      "Marked as Read",
+      "The selected notifications have been marked as read successfully.",
+      null,
+      "success"
+    );
   }
 
   function handleMuteSelected() {
     if (selected.length === 0) {
-      showAlertModal("No Selection", "Please select at least one notification.");
+      showAlertModal(
+        "No Selection",
+        "Please select at least one notification to mute."
+      );
       return;
     }
 
     setMutedIds((prev) => [...new Set([...prev, ...selected])]);
     setSelected([]);
-    showAlertModal("Muted", "Selected notifications have been muted.");
+    showAlertModal(
+      "Notifications Muted",
+      "The selected notifications have been muted and removed from the active list.",
+      null,
+      "success"
+    );
   }
 
   function handleDeleteSelected() {
     if (selected.length === 0) {
-      showAlertModal("No Selection", "Please select at least one notification.");
+      showAlertModal(
+        "No Selection",
+        "Please select at least one notification to delete."
+      );
       return;
     }
 
     setMutedIds((prev) => [...new Set([...prev, ...selected])]);
     setReadIds((prev) => prev.filter((id) => !selected.includes(id)));
     setSelected([]);
-    showAlertModal("Deleted", "Selected notifications were removed from the list.");
+    showAlertModal(
+      "Notifications Deleted",
+      "The selected notifications have been deleted from your current view.",
+      null,
+      "success"
+    );
   }
 
   function handleAlertSelected() {
     if (selected.length === 0) {
-      showAlertModal("No Selection", "Please select at least one notification.");
+      showAlertModal(
+        "No Selection",
+        "Please select at least one notification to send an alert."
+      );
       return;
     }
 
-    showAlertModal("Alert Sent", "Alert action triggered for selected notifications.");
+    showAlertModal(
+      "Alert Sent",
+      "A follow-up alert has been triggered for the selected notifications.",
+      null,
+      "success"
+    );
   }
 
   function handleMuteOne(id) {
     setMutedIds((prev) => [...new Set([...prev, id])]);
+    setSelected((prev) => prev.filter((item) => item !== id));
+    showAlertModal(
+      "Notification Muted",
+      "The notification has been muted and removed from the active list.",
+      null,
+      "success"
+    );
   }
 
   function handleDeleteOne(id) {
     setMutedIds((prev) => [...new Set([...prev, id])]);
     setReadIds((prev) => prev.filter((item) => item !== id));
     setSelected((prev) => prev.filter((item) => item !== id));
+    showAlertModal(
+      "Notification Deleted",
+      "The notification has been deleted from your current view.",
+      null,
+      "success"
+    );
   }
 
   function handleMarkOneRead(id) {
     setReadIds((prev) => [...new Set([...prev, id])]);
+    showAlertModal(
+      "Marked as Read",
+      "The notification has been marked as read.",
+      null,
+      "success"
+    );
+  }
+
+  function handleSendEmail(item) {
+    showAlertModal(
+      "Email Notification",
+      `An email notification has been prepared for ${item.docId} regarding "${item.title}".`,
+      null,
+      "success"
+    );
+  }
+
+  function handleRefreshNotifications() {
+    loadDocuments();
+    showAlertModal(
+      "Notifications Refreshed",
+      "The notification list has been refreshed successfully.",
+      null,
+      "success"
+    );
+  }
+
+  function handleClosePage() {
+    navigate("/dashboard");
   }
 
   function getIcon(type) {
@@ -281,6 +363,13 @@ export default function NotificationPage() {
     }
   }
 
+  function isActive(path) {
+    if (path === "/dashboard") {
+      return location.pathname === "/" || location.pathname === "/dashboard";
+    }
+    return location.pathname === path || location.pathname.startsWith(`${path}/`);
+  }
+
   return (
     <div className="notification-shell-page">
       <div className="notification-shell">
@@ -288,25 +377,36 @@ export default function NotificationPage() {
           <div className="notification-topbar-left">
             <img className="notification-seal" src={seal} alt="Seal" />
             <div className="notification-topbar-title">
-              Municipal Documents Dashboard
+              Document Notifications
             </div>
           </div>
 
           <div className="notification-topbar-right">
-            <button className="notification-icon-btn" type="button">
+            <button
+              className="notification-icon-btn"
+              type="button"
+              onClick={handleRefreshNotifications}
+              title="Refresh notifications"
+            >
               <Bell size={18} />
             </button>
 
             <ProfileMenu />
 
-            <button className="notification-icon-btn" type="button">
+            <button
+              className="notification-icon-btn"
+              type="button"
+              onClick={handleClosePage}
+              title="Close notifications"
+            >
               <X size={18} />
             </button>
 
             <button
               className="notification-icon-btn"
               type="button"
-              onClick={() => setNavOpen((v) => !v)}
+              onClick={() => setNavOpen(true)}
+              title="Open menu"
             >
               <Menu size={18} />
             </button>
@@ -316,9 +416,6 @@ export default function NotificationPage() {
         <main className="notification-page">
           <div className="notification-header">
             <h1>All Notification</h1>
-            <button className="filter-btn" type="button">
-              Filter
-            </button>
           </div>
 
           <div className="notification-panel">
@@ -377,7 +474,6 @@ export default function NotificationPage() {
                       <div
                         className="notification-content"
                         onClick={() => navigate(`/tracking/${item.docId}`)}
-                        style={{ cursor: "pointer" }}
                       >
                         <h3>
                           {item.title}{" "}
@@ -392,10 +488,41 @@ export default function NotificationPage() {
                     </div>
 
                     <div className="row-actions">
-                      <Trash2 size={15} onClick={() => handleDeleteOne(item.id)} />
-                      <Ban size={15} onClick={() => handleMuteOne(item.id)} />
-                      <Bell size={15} onClick={() => handleMarkOneRead(item.id)} />
-                      <Mail size={15} />
+                      <button
+                        type="button"
+                        className="row-action-btn"
+                        title="Delete notification"
+                        onClick={() => handleDeleteOne(item.id)}
+                      >
+                        <Trash2 size={15} />
+                      </button>
+
+                      <button
+                        type="button"
+                        className="row-action-btn"
+                        title="Mute notification"
+                        onClick={() => handleMuteOne(item.id)}
+                      >
+                        <Ban size={15} />
+                      </button>
+
+                      <button
+                        type="button"
+                        className="row-action-btn"
+                        title="Mark as read"
+                        onClick={() => handleMarkOneRead(item.id)}
+                      >
+                        <Check size={15} />
+                      </button>
+
+                      <button
+                        type="button"
+                        className="row-action-btn"
+                        title="Send email notification"
+                        onClick={() => handleSendEmail(item)}
+                      >
+                        <Mail size={15} />
+                      </button>
                     </div>
                   </div>
                 ))
@@ -410,88 +537,101 @@ export default function NotificationPage() {
       </div>
 
       {navOpen && (
-        <div className="docs-nav-overlay" onClick={() => setNavOpen(false)}>
-          <aside
-            className="docs-right-nav"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="nav-overlay" onClick={() => setNavOpen(false)}>
+          <aside className="right-nav" onClick={(e) => e.stopPropagation()}>
             <button className="nav-close" onClick={() => setNavOpen(false)}>
-              <X size={18} />
+              <X size={18} strokeWidth={2.2} />
             </button>
 
-            <nav className="docs-nav-list">
+            <nav className="nav-list">
               <button
-                className="docs-nav-item"
+                className={`nav-item ${isActive("/dashboard") ? "active" : ""}`}
                 onClick={() => navigate("/dashboard")}
               >
-                <span className="docs-nav-ico">
-                  <LayoutDashboard size={16} />
+                <span className="nav-ico">
+                  <LayoutDashboard size={16} strokeWidth={2.2} />
                 </span>
                 Dashboard
               </button>
 
               <button
-                className="docs-nav-item"
+                className={`nav-item ${isActive("/documents") ? "active" : ""}`}
                 onClick={() => navigate("/documents")}
               >
-                <span className="docs-nav-ico">
-                  <Files size={16} />
+                <span className="nav-ico">
+                  <Files size={16} strokeWidth={2.2} />
                 </span>
                 Documents
               </button>
 
               <button
-                className="docs-nav-item"
+                className={`nav-item ${isActive("/tracking") ? "active" : ""}`}
                 onClick={() => navigate("/tracking")}
               >
-                <span className="docs-nav-ico">
-                  <MapPinned size={16} />
+                <span className="nav-ico">
+                  <MapPinned size={16} strokeWidth={2.2} />
                 </span>
                 Tracking
               </button>
 
               <button
-                className="docs-nav-item active"
+                className={`nav-item ${
+                  isActive("/notifications") ? "active" : ""
+                }`}
                 onClick={() => navigate("/notifications")}
               >
-                <span className="docs-nav-ico">
-                  <Bell size={16} />
+                <span className="nav-ico">
+                  <Bell size={16} strokeWidth={2.2} />
                 </span>
                 Notification
               </button>
 
-              <button className="docs-nav-item">
-                <span className="docs-nav-ico">
-                  <Building2 size={16} />
+              <button
+                className={`nav-item ${
+                  isActive("/departments") ? "active" : ""
+                }`}
+                onClick={() => navigate("/departments")}
+              >
+                <span className="nav-ico">
+                  <Building2 size={16} strokeWidth={2.2} />
                 </span>
                 Departments
               </button>
 
-              <button className="docs-nav-item">
-                <span className="docs-nav-ico">
-                  <BarChart3 size={16} />
+              <button
+                className={`nav-item ${isActive("/reports") ? "active" : ""}`}
+                onClick={() => navigate("/reports")}
+              >
+                <span className="nav-ico">
+                  <BarChart3 size={16} strokeWidth={2.2} />
                 </span>
                 Reports &amp; Analytics
               </button>
 
-              <button className="docs-nav-item">
-                <span className="docs-nav-ico">
-                  <Settings size={16} />
+              <button
+                className={`nav-item ${isActive("/settings") ? "active" : ""}`}
+                onClick={() => navigate("/settings")}
+              >
+                <span className="nav-ico">
+                  <Settings size={16} strokeWidth={2.2} />
                 </span>
                 Settings
               </button>
 
-              <button className="docs-nav-item">
-                <span className="docs-nav-ico">
-                  <CircleHelp size={16} />
+              <button
+                className={`nav-item ${isActive("/help") ? "active" : ""}`}
+                onClick={() => navigate("/help")}
+              >
+                <span className="nav-ico">
+                  <CircleHelp size={16} strokeWidth={2.2} />
                 </span>
                 Help
               </button>
             </nav>
 
-            <div className="docs-nav-footer">
-              <button className="docs-nav-signout" onClick={onSignOut}>
-                <LogOut size={16} />
+            <div className="nav-footer">
+              <button className="nav-signout" onClick={onSignOut}>
+                <LogOut size={16} strokeWidth={2.2} />
                 <span>Sign out</span>
               </button>
             </div>
