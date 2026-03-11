@@ -1,10 +1,24 @@
-import React from "react";
+import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "../ui/Trackingdetails.css";
 import logo from "../assets/logo.jpg";
+import ProfileMenu from "../components/ProfileMenu";
+
+import {
+  Bell,
+  X,
+  Menu,
+  Files,
+  MapPinned,
+  Building2,
+  BarChart3,
+  Settings,
+  CircleHelp,
+  LayoutDashboard,
+  LogOut,
+} from "lucide-react";
 
 const documents = [
-
   {
     docId: "DOC-1001",
     displayId: "DOC - 1001",
@@ -76,8 +90,13 @@ const documents = [
 export default function Trackingdetails() {
   const { docId } = useParams();
   const navigate = useNavigate();
+  const [navOpen, setNavOpen] = useState(false);
 
   const document = documents.find((doc) => doc.docId === docId);
+
+  function onSignOut() {
+    alert("Sign out clicked.");
+  }
 
   if (!document) {
     return <div className="not-found">Document not found.</div>;
@@ -92,30 +111,43 @@ export default function Trackingdetails() {
         </div>
 
         <div className="topbar-right">
-          <button className="icon-btn" type="button">🔔</button>
-          <button className="icon-btn" type="button">🔔</button>
-          <button className="icon-btn circle-btn" type="button">✕</button>
-          <button className="icon-btn" type="button">☰</button>
+          <button className="icon-btn" aria-label="Notifications" type="button">
+            <Bell size={18} strokeWidth={2.2} />
+          </button>
+
+          <ProfileMenu />
+
+          <button className="icon-btn" aria-label="Close" type="button">
+            <X size={18} strokeWidth={2.2} />
+          </button>
+
+          <button
+            className="icon-btn"
+            aria-label="Open menu"
+            type="button"
+            onClick={() => setNavOpen((v) => !v)}
+          >
+            <Menu size={18} strokeWidth={2.2} />
+          </button>
         </div>
       </header>
 
       <div className="top-divider"></div>
 
-        <section className="content-head">
+      <section className="content-head">
         <div className="content-head-inner">
-
-            <div className="tracking-title">
+          <div className="tracking-title">
             <span
-                className="back-arrow"
-                onClick={() => navigate("/tracking")}
+              className="back-arrow"
+              onClick={() => navigate("/tracking")}
             >
-                ←
+              ←
             </span>
 
             <h2>Tracking Documents</h2>
-            </div>
+          </div>
 
-            <div className="search-box">
+          <div className="search-box">
             <input type="text" placeholder="Search Document ID..." />
             <span className="search-icon">⌕</span>
           </div>
@@ -124,23 +156,20 @@ export default function Trackingdetails() {
 
       <main className="details-wrapper">
         <div className="document-card">
-         <div className="document-card-header">
+          <div className="document-card-header">
+            <div className="header-left">
+              <h1>
+                {document.displayId} - {document.title}
+              </h1>
+            </div>
 
-                <div className="header-left">
-                   
+            <div className="action-buttons">
+              <button className="btn btn-forward" type="button">⟶ Forward</button>
+              <button className="btn btn-return" type="button">⬅ Return</button>
+              <button className="btn btn-decline" type="button">✕ Decline</button>
+            </div>
+          </div>
 
-                    <h1>
-                    {document.displayId} - {document.title}
-                    </h1>
-                </div>
-
-                <div className="action-buttons">
-                    <button className="btn btn-forward" type="button">⟶ Forward</button>
-                    <button className="btn btn-return" type="button">⬅ Return</button>
-                    <button className="btn btn-decline" type="button">✕ Decline</button>
-                </div>
-
-                </div>
           <div className="document-info">
             <div className="info-left">
               <p>
@@ -253,6 +282,99 @@ export default function Trackingdetails() {
           </div>
         </div>
       </main>
+
+      {navOpen && (
+        <div className="nav-overlay" onClick={() => setNavOpen(false)}>
+          <aside className="right-nav" onClick={(e) => e.stopPropagation()}>
+            <button className="nav-close" onClick={() => setNavOpen(false)}>
+              <X size={18} strokeWidth={2.2} />
+            </button>
+
+            <nav className="nav-list">
+              <button
+                className="nav-item"
+                onClick={() => {
+                  navigate("/dashboard");
+                  setNavOpen(false);
+                }}
+              >
+                <span className="nav-ico">
+                  <LayoutDashboard size={16} strokeWidth={2.2} />
+                </span>
+                Dashboard
+              </button>
+
+              <button
+                className="nav-item"
+                onClick={() => {
+                  navigate("/documents");
+                  setNavOpen(false);
+                }}
+              >
+                <span className="nav-ico">
+                  <Files size={16} strokeWidth={2.2} />
+                </span>
+                Documents
+              </button>
+
+              <button
+                className="nav-item active"
+                onClick={() => {
+                  navigate("/tracking");
+                  setNavOpen(false);
+                }}
+              >
+                <span className="nav-ico">
+                  <MapPinned size={16} strokeWidth={2.2} />
+                </span>
+                Tracking
+              </button>
+
+              <button className="nav-item">
+                <span className="nav-ico">
+                  <Bell size={16} strokeWidth={2.2} />
+                </span>
+                Notification
+              </button>
+
+              <button className="nav-item">
+                <span className="nav-ico">
+                  <Building2 size={16} strokeWidth={2.2} />
+                </span>
+                Departments
+              </button>
+
+              <button className="nav-item">
+                <span className="nav-ico">
+                  <BarChart3 size={16} strokeWidth={2.2} />
+                </span>
+                Reports &amp; Analytics
+              </button>
+
+              <button className="nav-item">
+                <span className="nav-ico">
+                  <Settings size={16} strokeWidth={2.2} />
+                </span>
+                Settings
+              </button>
+
+              <button className="nav-item">
+                <span className="nav-ico">
+                  <CircleHelp size={16} strokeWidth={2.2} />
+                </span>
+                Help
+              </button>
+            </nav>
+
+            <div className="nav-footer">
+              <button className="nav-signout" onClick={onSignOut}>
+                <LogOut size={16} strokeWidth={2.2} />
+                <span>Sign out</span>
+              </button>
+            </div>
+          </aside>
+        </div>
+      )}
     </div>
   );
 }

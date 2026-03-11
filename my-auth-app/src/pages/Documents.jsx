@@ -328,9 +328,9 @@ function handleEditSave() {
             <button className="docs-icon-btn" type="button" aria-label="Notifications">
               <Bell size={18} />
             </button>
-            <button className="docs-icon-btn" type="button" aria-label="User">
-              <User size={18} />
-            </button>
+            
+            <ProfileMenu />
+
             <button className="docs-icon-btn" type="button" aria-label="Close">
               <X size={18} />
             </button>
@@ -528,12 +528,18 @@ function handleEditSave() {
                 </span>
                 Documents
               </button>
-           <button className="docs-nav-item">
-                <span className="docs-nav-ico">
-                  <MapPinned size={16} />
-                </span>
-                Tracking
-              </button>
+          <button
+              className="nav-item"
+              onClick={() => {
+                navigate("/tracking");
+                setNavOpen(false);
+              }}
+            >
+              <span className="nav-ico">
+                <MapPinned size={16} strokeWidth={2.2} />
+              </span>
+              Tracking
+            </button>
 
               <button className="docs-nav-item">
                 <span className="docs-nav-ico">

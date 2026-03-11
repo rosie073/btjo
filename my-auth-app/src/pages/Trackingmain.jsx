@@ -1,7 +1,22 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../ui/Trackingmain.css";
 import logo from "../assets/logo.jpg";
+import ProfileMenu from "../components/ProfileMenu";
+
+import {
+  Bell,
+  X,
+  Menu,
+  Files,
+  MapPinned,
+  Building2,
+  BarChart3,
+  Settings,
+  CircleHelp,
+  LayoutDashboard,
+  LogOut,
+} from "lucide-react";
 
 const documents = [
   {
@@ -46,8 +61,12 @@ const documents = [
 ];
 
 export default function Trackingmain() {
+  const navigate = useNavigate();
+  const [navOpen, setNavOpen] = useState(false);
 
-    const navigate = useNavigate();
+  function onSignOut() {
+    alert("Sign out clicked.");
+  }
 
   return (
     <div className="tracking-page">
@@ -58,10 +77,24 @@ export default function Trackingmain() {
         </div>
 
         <div className="topbar-right">
-          <button className="icon-btn" type="button">🔔</button>
-          <button className="icon-btn" type="button">🔔</button>
-          <button className="icon-btn circle-btn" type="button">✕</button>
-          <button className="icon-btn" type="button">☰</button>
+          <button className="icon-btn" aria-label="Notifications" type="button">
+            <Bell size={18} strokeWidth={2.2} />
+          </button>
+
+          <ProfileMenu />
+
+          <button className="icon-btn" aria-label="Close" type="button">
+            <X size={18} strokeWidth={2.2} />
+          </button>
+
+          <button
+            className="icon-btn"
+            aria-label="Open menu"
+            type="button"
+            onClick={() => setNavOpen((v) => !v)}
+          >
+            <Menu size={18} strokeWidth={2.2} />
+          </button>
         </div>
       </header>
 
@@ -96,11 +129,10 @@ export default function Trackingmain() {
 
             <tbody>
               {documents.map((doc, index) => (
-               <tr
-                    key={`${doc.docId}-${index}`}
-                    onClick={() => navigate(`/tracking/${doc.docId}`)}
-                    >
-
+                <tr
+                  key={`${doc.docId}-${index}`}
+                  onClick={() => navigate(`/tracking/${doc.docId}`)}
+                >
                   <td>{doc.id}</td>
                   <td>{doc.title}</td>
                   <td>{doc.origin}</td>
@@ -121,6 +153,99 @@ export default function Trackingmain() {
           </table>
         </div>
       </main>
+
+      {navOpen && (
+        <div className="nav-overlay" onClick={() => setNavOpen(false)}>
+          <aside className="right-nav" onClick={(e) => e.stopPropagation()}>
+            <button className="nav-close" onClick={() => setNavOpen(false)}>
+              <X size={18} strokeWidth={2.2} />
+            </button>
+
+            <nav className="nav-list">
+              <button
+                className="nav-item"
+                onClick={() => {
+                  navigate("/dashboard");
+                  setNavOpen(false);
+                }}
+              >
+                <span className="nav-ico">
+                  <LayoutDashboard size={16} strokeWidth={2.2} />
+                </span>
+                Dashboard
+              </button>
+
+              <button
+                className="nav-item"
+                onClick={() => {
+                  navigate("/documents");
+                  setNavOpen(false);
+                }}
+              >
+                <span className="nav-ico">
+                  <Files size={16} strokeWidth={2.2} />
+                </span>
+                Documents
+              </button>
+
+              <button
+                className="nav-item active"
+                onClick={() => {
+                  navigate("/tracking");
+                  setNavOpen(false);
+                }}
+              >
+                <span className="nav-ico">
+                  <MapPinned size={16} strokeWidth={2.2} />
+                </span>
+                Tracking
+              </button>
+
+              <button className="nav-item">
+                <span className="nav-ico">
+                  <Bell size={16} strokeWidth={2.2} />
+                </span>
+                Notification
+              </button>
+
+              <button className="nav-item">
+                <span className="nav-ico">
+                  <Building2 size={16} strokeWidth={2.2} />
+                </span>
+                Departments
+              </button>
+
+              <button className="nav-item">
+                <span className="nav-ico">
+                  <BarChart3 size={16} strokeWidth={2.2} />
+                </span>
+                Reports &amp; Analytics
+              </button>
+
+              <button className="nav-item">
+                <span className="nav-ico">
+                  <Settings size={16} strokeWidth={2.2} />
+                </span>
+                Settings
+              </button>
+
+              <button className="nav-item">
+                <span className="nav-ico">
+                  <CircleHelp size={16} strokeWidth={2.2} />
+                </span>
+                Help
+              </button>
+            </nav>
+
+            <div className="nav-footer">
+              <button className="nav-signout" onClick={onSignOut}>
+                <LogOut size={16} strokeWidth={2.2} />
+                <span>Sign out</span>
+              </button>
+            </div>
+          </aside>
+        </div>
+      )}
     </div>
   );
 }

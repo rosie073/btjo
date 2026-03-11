@@ -610,12 +610,18 @@ function handleSaveDoc() {
                 Documents
               </button>
 
-              <button className="nav-item">
-                <span className="nav-ico">
-                  <MapPinned size={16} strokeWidth={2.2} />
-                </span>
-                Tracking
-              </button>
+            <button
+              className="nav-item"
+              onClick={() => {
+                navigate("/tracking");
+                setNavOpen(false);
+              }}
+            >
+              <span className="nav-ico">
+                <MapPinned size={16} strokeWidth={2.2} />
+              </span>
+              Tracking
+            </button>
 
               <button className="nav-item">
                 <span className="nav-ico">

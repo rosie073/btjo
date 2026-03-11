@@ -51,13 +51,34 @@ body {
 }
 
 .icon-btn {
-  background: transparent;
-  border: none;
-  color: white;
-  font-size: 22px;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.12);
   cursor: pointer;
   padding: 0;
-  line-height: 1;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+  color: #ffffff;
+}
+
+.icon-btn:hover {
+  background: rgba(255, 255, 255, 0.20);
+  border-color: rgba(255, 255, 255, 0.28);
+  transform: translateY(-1px);
+}
+
+.icon-btn:active {
+  transform: translateY(0);
+}
+
+.icon-btn svg {
+  width: 18px;
+  height: 18px;
+  stroke: #ffffff;
+  opacity: 0.95;
 }
 
 .circle-btn {
@@ -73,7 +94,7 @@ body {
 
 /* SECTION BETWEEN TWO LINES */
 .content-head {
-  margin-top: 8px; /* creates space below the blue bar */
+  margin-top: 8px;
   border-top: 1px solid #bdbdbd;
   border-bottom: 1px solid #bdbdbd;
 }
@@ -115,6 +136,7 @@ body {
   position: absolute;
   right: 8px;
   top: 4px;
+  transform: translateY(2%);
   font-size: 15px;
   color: #d3d3d3;
   pointer-events: none;
@@ -165,6 +187,7 @@ body {
 
 .tracking-table tbody tr:hover {
   background: #e3ebff;
+  cursor: pointer;
 }
 
 /* STATUS BADGES */
@@ -197,6 +220,177 @@ body {
 
 .status-badge.incoming {
   background: #f0b143;
+}
+
+/* RIGHT SIDEBAR NAV */
+.nav-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 9998;
+}
+
+.right-nav {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 310px;
+  background: #6f8fce;
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.25);
+  padding: 18px 16px;
+  animation: slideInRight 180ms ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(40px);
+    opacity: 0.7;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.nav-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.nav-list {
+  margin-top: 30px;
+  display: grid;
+  gap: 8px;
+}
+
+.nav-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: none;
+  background: transparent;
+  color: #fff;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  font-size: 15px;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.nav-item.active {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.nav-ico {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+}
+
+.nav-ico svg {
+  width: 16px;
+  height: 16px;
+  stroke: #ffffff;
+}
+
+.nav-footer {
+  position: absolute;
+  bottom: 18px;
+  left: 16px;
+  right: 16px;
+}
+
+.nav-signout {
+  width: 100%;
+  border: none;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-weight: 600;
+  padding: 10px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.nav-signout:hover {
+  background: rgba(255, 255, 255, 0.26);
+}
+
+/* PROFILE */
+.profile-wrapper {
+  position: relative;
+  z-index: 2000;
+}
+
+.profile-dropdown {
+  position: absolute;
+  top: 44px;
+  right: 0;
+  width: 170px;
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  overflow: hidden;
+  z-index: 3000;
+}
+
+.profile-dropdown button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.profile-dropdown button:hover {
+  background: #f3f6fb;
+}
+
+.profile-dropdown .logout {
+  color: red;
+  font-weight: bold;
+}
+
+.profile-icon-btn {
+  padding: 0;
+  overflow: hidden;
+}
+
+.topbar-profile-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
 }
 
 /* RESPONSIVE */
