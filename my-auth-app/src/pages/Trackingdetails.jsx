@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "../ui/Trackingdetails.css";
 import logo from "../assets/logo.jpg";
 import ProfileMenu from "../components/ProfileMenu";
+import { getDocuments, seedDocuments, updateDocument } from "../data/documentStore";
 
 import {
   Bell,
@@ -18,81 +19,201 @@ import {
   LogOut,
 } from "lucide-react";
 
-const documents = [
-  {
-    docId: "DOC-1001",
-    displayId: "DOC - 1001",
-    title: "Building Permit Request",
-    currentDepartment: "Mayor",
-    currentOfficer: "J. Silvalism",
-    currentStatus: "Decline",
-    dateReceived: "01/15/2026",
-    lastUpdate: "02/15/2026",
-    slaRemaining: "2 days",
-    history: [
-      {
-        step: 1,
-        department: "Market",
-        assignTo: "J. Silvalism",
-        action: "Reviewed",
-        date: "01/15/2026",
-        daysInDept: 5,
-        remarks: "",
-      },
-    ],
-  },
-  {
-    docId: "DOC-1002",
-    displayId: "DOC - 1002",
-    title: "Approval Document",
-    currentDepartment: "Mayor",
-    currentOfficer: "D. Coley",
-    currentStatus: "Return",
-    dateReceived: "01/15/2026",
-    lastUpdate: "02/15/2026",
-    slaRemaining: "3 days",
-    history: [
-      {
-        step: 1,
-        department: "Mayor",
-        assignTo: "D. Coley",
-        action: "Returned",
-        date: "01/15/2026",
-        daysInDept: 5,
-        remarks: "",
-      },
-    ],
-  },
-  {
-    docId: "DOC-1003",
-    displayId: "DOC - 1003",
-    title: "SALN",
-    currentDepartment: "Mayor",
-    currentOfficer: "J. Silvalism",
-    currentStatus: "Pending",
-    dateReceived: "01/15/2026",
-    lastUpdate: "02/15/2026",
-    slaRemaining: "2 days",
-    history: [
-      {
-        step: 1,
-        department: "SB",
-        assignTo: "K. Pance",
-        action: "Reviewed",
-        date: "01/15/2026",
-        daysInDept: 5,
-        remarks: "",
-      },
-    ],
-  },
-];
-
 export default function Trackingdetails() {
   const { docId } = useParams();
   const navigate = useNavigate();
   const [navOpen, setNavOpen] = useState(false);
+  const [document, setDocument] = useState(null);
+  const [remarkText, setRemarkText] = useState("");
+  const [savedRemark, setSavedRemark] = useState("");
 
-  const document = documents.find((doc) => doc.docId === docId);
+  useEffect(() => {
+    seedDocuments();
+    loadDocument();
+
+    const refresh = () => loadDocument();
+    window.addEventListener("documentsUpdated", refresh);
+
+    return () => {
+      window.removeEventListener("documentsUpdated", refresh);
+    };
+  }, [docId]);
+
+  function loadDocument() {
+    const savedDocs = getDocuments();
+    const foundDoc = savedDocs.find((doc) => doc.id === docId);
+
+    if (!foundDoc) {
+      setDocument(null);
+      return;
+    }
+
+    const formattedDoc = {
+      ...foundDoc,
+      docId: foundDoc.id,
+      displayId: foundDoc.id,
+      currentDepartment: foundDoc.current || foundDoc.origin || "",
+      currentOfficer: foundDoc.assign || "Unassigned",
+      currentStatus: foundDoc.status || "Incoming",
+      dateReceived: foundDoc.received || "",
+      lastUpdate: foundDoc.updated || "",
+      route: foundDoc.route || [foundDoc.origin],
+      slaRemaining: `${foundDoc.days ?? 0} days`,
+      history: foundDoc.history || [
+        {
+          step: 1,
+          department: foundDoc.origin || "",
+          assignTo: foundDoc.assign || "Unassigned",
+          action: "Created",
+          date: foundDoc.received || "",
+          daysInDept: foundDoc.days ?? 0,
+          remarks: "",
+        },
+      ],
+    };
+
+    setDocument(formattedDoc);
+  }
+
+  function formatToday() {
+    const today = new Date();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    const year = today.getFullYear();
+    return `${month}/${day}/${year}`;
+  }
+
+  function getNextDepartment(currentDept) {
+    const route = document?.route || [];
+    const currentIndex = route.indexOf(currentDept);
+
+    if (currentIndex === -1) return currentDept;
+    if (currentIndex >= route.length - 1) return currentDept;
+
+    return route[currentIndex + 1];
+  }
+
+  function getPreviousDepartment(currentDept) {
+  const route = document?.route || [];
+  const currentIndex = route.indexOf(currentDept);
+
+  if (currentIndex <= 0) return currentDept;
+
+  return route[currentIndex - 1];
+  }
+
+  function getTimelineClass(stepDept) {
+    const route = document?.route || [];
+    const currentDept = document?.currentDepartment || "";
+    const currentIndex = route.indexOf(currentDept);
+    const stepIndex = route.indexOf(stepDept);
+
+    if (stepDept === currentDept) return "blue";
+    if (stepIndex !== -1 && currentIndex !== -1 && stepIndex < currentIndex) {
+      return "green";
+    }
+    return "gray";
+  }
+
+  function getTimelineIcon(dept, index) {
+    if (index === 0) return "✕";
+    if (dept === "Legal") return "⚖";
+    if (dept === "Completed") return "✓";
+    return "🏢";
+  }
+
+  function handleAddRemark() {
+    if (!remarkText.trim()) return;
+    setSavedRemark(remarkText.trim());
+  }
+
+  function handleForward() {
+    if (!document) return;
+
+    const today = formatToday();
+    const nextDepartment = getNextDepartment(document.currentDepartment);
+    const remarkToUse = savedRemark || remarkText.trim();
+
+    const newHistoryRow = {
+      step: document.history.length + 1,
+      department: nextDepartment,
+      assignTo: "Unassigned",
+      action: "Forwarded",
+      date: today,
+      daysInDept: 0,
+      remarks: remarkToUse,
+    };
+
+    const updatedDoc = {
+      ...document,
+      currentDepartment: nextDepartment,
+      currentOfficer: "Unassigned",
+      currentStatus: "Pending",
+      lastUpdate: today,
+      history: [...document.history, newHistoryRow],
+    };
+
+    setDocument(updatedDoc);
+
+    updateDocument({
+      ...document,
+      id: document.docId,
+      current: nextDepartment,
+      assign: "Unassigned",
+      status: "Pending",
+      updated: today,
+      route: document.route,
+      history: [...document.history, newHistoryRow],
+    });
+
+    setRemarkText("");
+    setSavedRemark("");
+    window.dispatchEvent(new Event("documentsUpdated"));
+  }
+
+  function handleReturn() {
+  if (!document) return;
+
+  const today = formatToday();
+  const previousDepartment = getPreviousDepartment(document.currentDepartment);
+  const remarkToUse = savedRemark || remarkText.trim();
+
+  const newHistoryRow = {
+    step: document.history.length + 1,
+    department: previousDepartment,
+    assignTo: "Unassigned",
+    action: "Returned",
+    date: today,
+    daysInDept: 0,
+    remarks: remarkToUse,
+  };
+
+  const updatedDoc = {
+    ...document,
+    currentDepartment: previousDepartment,
+    currentOfficer: "Unassigned",
+    currentStatus: "Returned",
+    lastUpdate: today,
+    history: [...document.history, newHistoryRow],
+  };
+
+  setDocument(updatedDoc);
+
+  updateDocument({
+    ...document,
+    id: document.docId,
+    current: previousDepartment,
+    assign: "Unassigned",
+    status: "Returned",
+    updated: today,
+    route: document.route,
+    history: [...document.history, newHistoryRow],
+  });
+
+  setRemarkText("");
+  setSavedRemark("");
+  window.dispatchEvent(new Event("documentsUpdated"));
+}
 
   function onSignOut() {
     alert("Sign out clicked.");
@@ -137,10 +258,7 @@ export default function Trackingdetails() {
       <section className="content-head">
         <div className="content-head-inner">
           <div className="tracking-title">
-            <span
-              className="back-arrow"
-              onClick={() => navigate("/tracking")}
-            >
+            <span className="back-arrow" onClick={() => navigate("/tracking")}>
               ←
             </span>
 
@@ -164,9 +282,20 @@ export default function Trackingdetails() {
             </div>
 
             <div className="action-buttons">
-              <button className="btn btn-forward" type="button">⟶ Forward</button>
-              <button className="btn btn-return" type="button">⬅ Return</button>
-              <button className="btn btn-decline" type="button">✕ Decline</button>
+              <button className="btn btn-forward" type="button" onClick={handleForward}>
+                ⟶ Forward
+              </button>
+              <button
+                className="btn btn-return"
+                type="button"
+                onClick={handleReturn}
+              >
+                ⬅ Return
+              </button>
+              
+              <button className="btn btn-decline" type="button">
+                ✕ Decline
+              </button>
             </div>
           </div>
 
@@ -205,43 +334,34 @@ export default function Trackingdetails() {
           </div>
         </div>
 
-        <div className="timeline-wrapper">
-          <div className="timeline-bar timeline-green"></div>
-          <div className="timeline-bar timeline-blue"></div>
-          <div className="timeline-bar timeline-gray"></div>
+       <div className="timeline-wrapper">
+            {document.route.map((dept, index) => {
+              const circleClass = getTimelineClass(dept);
+              const isLast = index === document.route.length - 1;
 
-          <div className="timeline-step">
-            <div className="timeline-circle green">✕</div>
-            <div className="timeline-label">Submitted</div>
-          </div>
+              return (
+                <div className="timeline-step" key={`${dept}-${index}`}>
+                  {!isLast && (
+                    <div className={`timeline-connector ${circleClass}`}></div>
+                  )}
 
-          <div className="timeline-step">
-            <div className="timeline-circle blue">🏢</div>
-            <div className="timeline-label">SB</div>
-          </div>
+                  <div className={`timeline-circle ${circleClass}`}>
+                    {getTimelineIcon(dept, index)}
+                  </div>
 
-          <div className="timeline-step">
-            <div className="timeline-circle gray">🏢</div>
-            <div className="timeline-label">Mayor</div>
+                  <div className="timeline-label">{dept}</div>
+                </div>
+              );
+            })}
           </div>
-
-          <div className="timeline-step">
-            <div className="timeline-circle gray">⚖</div>
-            <div className="timeline-label">Legal</div>
-          </div>
-
-          <div className="timeline-step">
-            <div className="timeline-circle gray">✓</div>
-            <div className="timeline-label">Completed</div>
-          </div>
-        </div>
 
         <div className="movement-box">
           <div className="section-header movement-header">
             <span className="section-icon">📄</span>
             <span>Movement History</span>
-          </div>
+          </div>  
 
+          <div className="movement-table-wrap">
           <table className="movement-table">
             <thead>
               <tr>
@@ -255,8 +375,8 @@ export default function Trackingdetails() {
               </tr>
             </thead>
             <tbody>
-              {document.history.map((item) => (
-                <tr key={item.step}>
+              {document.history.map((item, index) => (
+                <tr key={`${item.step}-${index}`}>
                   <td>{item.step}</td>
                   <td>{item.department}</td>
                   <td>{item.assignTo}</td>
@@ -268,6 +388,7 @@ export default function Trackingdetails() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
 
         <div className="remarks-box">
@@ -277,8 +398,15 @@ export default function Trackingdetails() {
           </div>
 
           <div className="remarks-content">
-            <input type="text" placeholder="Add Remarks......" />
-            <button type="button">Add Remarks</button>
+            <input
+              type="text"
+              placeholder="Add Remarks......"
+              value={remarkText}
+              onChange={(e) => setRemarkText(e.target.value)}
+            />
+            <button type="button" onClick={handleAddRemark}>
+              Add Remarks
+            </button>
           </div>
         </div>
       </main>
@@ -330,12 +458,16 @@ export default function Trackingdetails() {
                 Tracking
               </button>
 
-              <button className="nav-item">
+              <button
+                className="nav-item"
+                onClick={() => navigate("/notifications")}
+              >
                 <span className="nav-ico">
                   <Bell size={16} strokeWidth={2.2} />
                 </span>
                 Notification
               </button>
+
 
               <button className="nav-item">
                 <span className="nav-ico">

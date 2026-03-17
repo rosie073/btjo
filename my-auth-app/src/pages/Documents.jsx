@@ -340,7 +340,7 @@ export default function Documents() {
       <div className="docs-shell">
         <header className="docs-topbar">
           <div className="docs-topbar-left">
-            <img className="docs-seal" src={seal} alt="Seal" />
+            <img className="docs-seal" src={seal} alt="Seal"/>
             <div className="docs-topbar-title">Municipal Documents</div>
           </div>
 
@@ -353,11 +353,7 @@ export default function Documents() {
             >
               <Bell size={18} />
             </button>
-<<<<<<< HEAD
-            
-=======
 
->>>>>>> 6e5370feb4383af4ae3ad56e5189f8ada7746478
             <ProfileMenu />
 
             <button className="docs-icon-btn" type="button" aria-label="Close">
@@ -372,6 +368,7 @@ export default function Documents() {
             >
               <Menu size={18} />
             </button>
+
           </div>
         </header>
 
@@ -574,31 +571,19 @@ export default function Documents() {
                 </span>
                 Documents
               </button>
-<<<<<<< HEAD
-          <button
-              className="nav-item"
-              onClick={() => {
-                navigate("/tracking");
-                setNavOpen(false);
-              }}
-            >
-              <span className="nav-ico">
-                <MapPinned size={16} strokeWidth={2.2} />
-              </span>
-              Tracking
-            </button>
-=======
 
               <button
                 className={`nav-item ${isActive("/tracking") ? "active" : ""}`}
-                onClick={() => navigate("/tracking")}
+                onClick={() => {
+                  navigate("/tracking");
+                  setNavOpen(false);
+                }}
               >
                 <span className="nav-ico">
                   <MapPinned size={16} strokeWidth={2.2} />
                 </span>
                 Tracking
               </button>
->>>>>>> 6e5370feb4383af4ae3ad56e5189f8ada7746478
 
               <button
                 className={`nav-item ${

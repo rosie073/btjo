@@ -417,3 +417,25 @@ body {
     width: 100%;
   }
 }
+
+.movement-table-wrap {
+  max-height: 120px; /* around 3 rows visible */
+  overflow-y: auto;
+  overflow-x: auto;
+}
+
+.movement-table-wrap::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.movement-table-wrap::-webkit-scrollbar-thumb {
+  background: #bfc8db;
+  border-radius: 6px;
+}
+
+.movement-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}

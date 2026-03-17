@@ -280,60 +280,59 @@ body {
   background: #cf9538;
 }
 
+.status-badge.returned {
+  background: #47BA33;
+  color: #ffffff;
+}
+
 .status-badge.decline {
   background: #e14a43;
 }
 
-.status-badge.return {
-  background: #69c15f;
-}
+
 
 /* TIMELINE */
 .timeline-wrapper {
-  position: relative;
-  width: 84%;
+  width: 90%;
   margin: 12px auto 10px;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
 }
 
-.timeline-bar {
-  position: absolute;
-  top: 20px;
-  height: 3px;
-  z-index: 0;
-}
-
-.timeline-green {
-  left: 4%;
-  width: 35%;
-  background: #46bf52;
-}
-
-.timeline-blue {
-  left: 25%;
-  width: 23%;
-  background: #3385eb;
-}
-
-.timeline-gray {
-  left: 48%;
-  width: 50%;
-  background: #a8a8a8;
-}
-
 .timeline-step {
   position: relative;
-  z-index: 1;
-  width: 88px;
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
 }
 
+.timeline-connector {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  width: 100%;
+  height: 3px;
+  z-index: 0;
+}
+
+.timeline-connector.green {
+  background: #46bf52;
+}
+
+.timeline-connector.blue {
+  background: #3385eb;
+}
+
+.timeline-connector.gray {
+  background: #a8a8a8;
+}
+
 .timeline-circle {
+  position: relative;
+  z-index: 1;
   width: 42px;
   height: 42px;
   border-radius: 50%;

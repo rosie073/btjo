@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getDocuments, seedDocuments } from "../data/documentStore";
 import "../ui/Trackingmain.css";
 import logo from "../assets/logo.jpg";
 import ProfileMenu from "../components/ProfileMenu";
@@ -18,51 +19,52 @@ import {
   LogOut,
 } from "lucide-react";
 
-const documents = [
-  {
-    docId: "DOC-1001",
-    id: "Doc - 1001",
-    title: "Building Permit Request",
-    origin: "Market",
-    current: "Mayor",
-    status: "Decline",
-    officer: "J. Silvalism",
-    received: "01/15/2026",
-    update: "02/15/2026",
-    days: 5,
-    due: "05/15/2026",
-  },
-  {
-    docId: "DOC-1002",
-    id: "Doc - 1002",
-    title: "Approval Document",
-    origin: "Mayor",
-    current: "Mayor",
-    status: "Return",
-    officer: "D. Coley",
-    received: "01/15/2026",
-    update: "02/15/2026",
-    days: 5,
-    due: "05/15/2026",
-  },
-  {
-    docId: "DOC-1003",
-    id: "Doc - 1003",
-    title: "SALN",
-    origin: "SB",
-    current: "Mayor",
-    status: "Pending",
-    officer: "K. Pance",
-    received: "01/15/2026",
-    update: "02/15/2026",
-    days: 5,
-    due: "05/15/2026",
-  },
-];
-
 export default function Trackingmain() {
   const navigate = useNavigate();
+
+  const [documents, setDocuments] = useState([]);
   const [navOpen, setNavOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+  seedDocuments();
+  loadDocuments();
+
+  const refresh = () => loadDocuments();
+  window.addEventListener("documentsUpdated", refresh);
+
+  return () => {
+    window.removeEventListener("documentsUpdated", refresh);
+  };
+}, []);
+
+function loadDocuments() {
+  const savedDocs = getDocuments();
+
+  const formattedDocs = savedDocs.map((doc) => ({
+    ...doc,
+    docId: doc.id,
+    id: doc.id,
+    officer: doc.assign || "Unassigned",
+    update: doc.updated ||  "",
+  }));
+
+  setDocuments(formattedDocs);
+}
+
+const filteredDocuments = documents.filter((doc) => {
+  const value = searchTerm.toLowerCase();
+
+  return (
+    doc.id.toLowerCase().includes(value) ||
+    doc.title.toLowerCase().includes(value) ||
+    doc.origin.toLowerCase().includes(value) ||
+    doc.current.toLowerCase().includes(value) ||
+    doc.officer.toLowerCase().includes(value)
+  );
+});
+
+
 
   function onSignOut() {
     alert("Sign out clicked.");
@@ -103,7 +105,13 @@ export default function Trackingmain() {
           <h2>Tracking Documents</h2>
 
           <div className="search-box">
-            <input type="text" placeholder="Search Document ID..." />
+            <input
+              type="text"
+              placeholder="Search Document ID..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+
             <span className="search-icon">⌕</span>
           </div>
         </div>
@@ -129,10 +137,10 @@ export default function Trackingmain() {
 
             <tbody>
               {documents.map((doc, index) => (
-                <tr
-                  key={`${doc.docId}-${index}`}
-                  onClick={() => navigate(`/tracking/${doc.docId}`)}
-                >
+                  <tr
+                    key={`${doc.docId}-${index}`}
+                    onClick={() => navigate(`/tracking/${doc.docId}`)}
+                  >
                   <td>{doc.id}</td>
                   <td>{doc.title}</td>
                   <td>{doc.origin}</td>
@@ -201,12 +209,16 @@ export default function Trackingmain() {
                 Tracking
               </button>
 
-              <button className="nav-item">
-                <span className="nav-ico">
-                  <Bell size={16} strokeWidth={2.2} />
-                </span>
-                Notification
-              </button>
+             <button
+                className="nav-item"
+                onClick={() => navigate("/notifications")}
+                >
+               <span className="nav-ico">
+               <Bell size={16} strokeWidth={2.2} />
+              </span>
+               Notification
+               </button>
+             
 
               <button className="nav-item">
                 <span className="nav-ico">

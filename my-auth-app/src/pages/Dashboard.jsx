@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import seal from "../assets/logo.jpg";
 import ProfileMenu from "../components/ProfileMenu";
 import AppModal from "../components/AppModal";
+import AddDocumentsModal from "./adddoc.jsx";
 
 import {
   Bell,
@@ -691,200 +692,14 @@ function Dashboard() {
         </div>
       )}
 
-      {showAddDocs && (
-        <div className="adddocs-overlay" onClick={() => setShowAddDocs(false)}>
-          <div className="adddocs-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="adddocs-header">
-              <div>
-                <h2>ADD DOCUMENTS</h2>
-                <p className="adddocs-subtitle">
-                  Enter the document details and upload related files.
-                </p>
-              </div>
-
-              <div className="adddocs-top-actions">
-                <button
-                  className="adddocs-x"
-                  onClick={() => setShowAddDocs(false)}
-                  aria-label="Close modal"
-                  type="button"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-            </div>
-
-            <div className="adddocs-body">
-              <div className="adddocs-input-wrap adddocs-search-wrap">
-                <input
-                  className="adddocs-input"
-                  placeholder="Search documents"
-                  value={docForm.search}
-                  onChange={(e) => handleDocChange("search", e.target.value)}
-                />
-                <Search className="adddocs-input-icon" size={18} />
-              </div>
-
-              <div className="adddocs-input-wrap">
-                <input
-                  className="adddocs-input"
-                  placeholder="Document Type"
-                  value={docForm.documentType}
-                  onChange={(e) => handleDocChange("documentType", e.target.value)}
-                />
-              </div>
-
-              <div className="adddocs-input-wrap">
-                <input
-                  className="adddocs-input"
-                  placeholder="Application Name"
-                  value={docForm.applicationName}
-                  onChange={(e) => handleDocChange("applicationName", e.target.value)}
-                />
-              </div>
-
-              <div className="adddocs-select-wrap">
-                <select
-                  className="adddocs-field"
-                  value={docForm.originDepartment}
-                  onChange={(e) => handleDocChange("originDepartment", e.target.value)}
-                >
-                  <option value="">Origin Department</option>
-                  {departments.map((dept) => (
-                    <option key={dept} value={dept}>
-                      {dept}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="adddocs-select-icon" size={18} />
-              </div>
-
-              <div className="adddocs-row">
-                <div className="adddocs-select-wrap">
-                  <select
-                    className="adddocs-field"
-                    value={docForm.priorityLabel}
-                    onChange={(e) => handleDocChange("priorityLabel", e.target.value)}
-                  >
-                    <option value="Priority">Priority</option>
-                    <option value="Classification">Classification</option>
-                  </select>
-                  <ChevronDown className="adddocs-select-icon" size={18} />
-                </div>
-
-                <div className="adddocs-select-wrap">
-                  <select
-                    className="adddocs-field"
-                    value={docForm.priorityLevel}
-                    onChange={(e) => handleDocChange("priorityLevel", e.target.value)}
-                  >
-                    <option value="Normal">Normal</option>
-                    <option value="Urgent">Urgent</option>
-                    <option value="High">High</option>
-                  </select>
-                  <ChevronDown className="adddocs-select-icon" size={18} />
-                </div>
-
-                <div className="adddocs-input-wrap adddocs-date-wrap">
-                  <input
-                    ref={dateInputRef}
-                    type="date"
-                    className="adddocs-field adddocs-date-input"
-                    value={docForm.date}
-                    onChange={(e) => handleDocChange("date", e.target.value)}
-                  />
-
-                  <button
-                    type="button"
-                    className="adddocs-date-btn"
-                    aria-label="Open calendar"
-                    onClick={() => {
-                      if (dateInputRef.current) {
-                        if (dateInputRef.current.showPicker) {
-                          dateInputRef.current.showPicker();
-                        } else {
-                          dateInputRef.current.focus();
-                        }
-                      }
-                    }}
-                  >
-                    <CalendarDays size={18} />
-                  </button>
-                </div>
-              </div>
-
-              <input
-                ref={fileInputRef}
-                type="file"
-                multiple
-                style={{ display: "none" }}
-                onChange={handleFileSelect}
-              />
-
-              {uploadedFiles.length > 0 && (
-                <div className="uploaded-files-box">
-                  <div className="uploaded-files-title">
-                    Uploaded Files ({uploadedFiles.length})
-                  </div>
-
-                  <div className="uploaded-files-list">
-                    {uploadedFiles.map((file, index) => (
-                      <div
-                        key={`${file.name}-${file.lastModified}-${index}`}
-                        className="uploaded-file-item"
-                      >
-                        <div className="uploaded-file-left">
-                          <Paperclip size={16} color="#234a91" />
-                          <div className="uploaded-file-text">
-                            <div className="uploaded-file-name">{file.name}</div>
-                            <div className="uploaded-file-size">
-                              {formatFileSize(file.size)}
-                            </div>
-                          </div>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveFile(index)}
-                          className="uploaded-file-remove"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="adddocs-footer">
-                <div className="adddocs-left">
-                  <button
-                    className="adddocs-small"
-                    type="button"
-                    onClick={handleUploadFiles}
-                  >
-                    <Upload size={16} />
-                    <span>Upload Files</span>
-                  </button>
-                </div>
-
-                <div className="adddocs-right">
-                  <button className="adddocs-save" onClick={handleSaveDoc}>
-                    Save
-                  </button>
-                  <button
-                    className="adddocs-cancel"
-                    onClick={() => setShowAddDocs(false)}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
+    
+    <AddDocumentsModal
+      open={showAddDocs}
+      onClose={() => setShowAddDocs(false)}
+      onSaved={() => loadDocuments()}
+      departments={departments}
+    />
+    
       <AppModal
         open={modal.open}
         title={modal.title}
