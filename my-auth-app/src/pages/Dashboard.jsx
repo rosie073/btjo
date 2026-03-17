@@ -47,6 +47,8 @@ function Dashboard() {
   const [navOpen, setNavOpen] = useState(false);
   const [documents, setDocuments] = useState([]);
 
+  const [selectedDocId, setSelectedDocId] = useState(null);
+
   const dateInputRef = useRef(null);
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
@@ -145,9 +147,15 @@ function Dashboard() {
     };
   }, []);
 
-  function loadDocuments() {
-    setDocuments(getDocuments());
-  }
+ function loadDocuments() {
+  const docs = getDocuments();
+  setDocuments(docs);
+
+  setSelectedDocId((prev) => {
+    if (prev && docs.some((doc) => doc.id === prev)) return prev;
+    return docs.length > 0 ? docs[0].id : null;
+  });
+}
 
   const stats = useMemo(() => {
     const total = documents.length;
@@ -206,46 +214,108 @@ function Dashboard() {
     ];
   }, [documents]);
 
-  const deptCards = [
-    {
-      title: "Coast Guard",
-      total: 7,
-      items: [
-        { label: "Pending", value: 4 },
-        { label: "Overdue", value: 3 },
-      ],
-      tone: "green",
-      icon: <Shield size={16} strokeWidth={2.2} />,
-    },
-    {
-      title: "Engineering",
-      total: 6,
-      items: [
-        { label: "In Progress", value: 6 },
-        { label: "Overdue", value: 2 },
-      ],
-      tone: "mint",
-      icon: <Wrench size={16} strokeWidth={2.2} />,
-    },
-    {
-      title: "Mayor's Office",
-      total: 5,
-      items: [
-        { label: "Reviewing", value: 3 },
-        { label: "Completed", value: 2 },
-      ],
-      tone: "blue",
-      icon: <Landmark size={16} strokeWidth={2.2} />,
-    },
-  ];
+  const selectedDocument = useMemo(() => {
+  return documents.find((doc) => doc.id === selectedDocId) || null;
+}, [documents, selectedDocId]);
 
-  const history = [
-    { label: "Submitted by Applicant", date: "01/22/2026", type: "ok" },
-    { label: "Sent to Tourism Dept.", date: "01/29/2026", type: "ok" },
-    { label: "Reviewed by Engineering Dept.", date: "02/03/2026", type: "ok" },
-    { label: "Returned for Revision", date: "02/10/2026", type: "bad" },
-    { label: "Approved by Budget Office", date: "02/10/2026", type: "ok" },
+const deptCards = useMemo(() => {
+  const today = new Date();
+
+  const grouped = documents.reduce((acc, doc) => {
+    const dept = doc.current || doc.origin || "Unassigned";
+
+    if (!acc[dept]) {
+      acc[dept] = {
+        title: dept,
+        total: 0,
+        pending: 0,
+        inProgress: 0,
+        completed: 0,
+        overdue: 0,
+      };
+    }
+
+    acc[dept].total += 1;
+
+    if (doc.status === "Pending" || doc.status === "Returned") {
+      acc[dept].pending += 1;
+      acc[dept].inProgress += 1;
+    }
+
+    if (doc.status === "Incoming") {
+      acc[dept].inProgress += 1;
+    }
+
+    if (doc.status === "Completed") {
+      acc[dept].completed += 1;
+    }
+
+    if (parseDate(doc.due) < today && doc.status !== "Completed") {
+      acc[dept].overdue += 1;
+    }
+
+    return acc;
+  }, {});
+
+  const iconMap = {
+    "Coast Guard": <Shield size={16} strokeWidth={2.2} />,
+    Engineering: <Wrench size={16} strokeWidth={2.2} />,
+    "Mayor's Office": <Landmark size={16} strokeWidth={2.2} />,
+  };
+
+  const toneCycle = ["green", "mint", "blue"];
+
+  return Object.values(grouped)
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 3)
+    .map((dept, index) => ({
+      title: dept.title,
+      total: dept.total,
+      items: [
+        { label: "Pending", value: dept.pending },
+        { label: "In Progress", value: dept.inProgress },
+        { label: "Completed", value: dept.completed },
+        { label: "Overdue", value: dept.overdue },
+      ].filter((item) => item.value > 0),
+      tone: toneCycle[index % toneCycle.length],
+      icon:
+        iconMap[dept.title] || <Building2 size={16} strokeWidth={2.2} />,
+    }));
+}, [documents]);
+
+const history = useMemo(() => {
+  if (!selectedDocument) return [];
+
+  if (selectedDocument.history && selectedDocument.history.length > 0) {
+    return selectedDocument.history;
+  }
+
+  return [
+    {
+      label: `Document created in ${selectedDocument.origin}`,
+      date: selectedDocument.received,
+      type: "ok",
+    },
+    {
+      label: `Currently assigned to ${selectedDocument.current}`,
+      date: selectedDocument.updated,
+      type:
+        selectedDocument.status === "Declined" ||
+        selectedDocument.status === "Returned"
+          ? "bad"
+          : "ok",
+    },
+    {
+      label: `Status: ${selectedDocument.status}`,
+      date: selectedDocument.updated,
+      type:
+        selectedDocument.status === "Declined" ||
+        selectedDocument.status === "Returned"
+          ? "bad"
+          : "ok",
+    },
   ];
+}, [selectedDocument]);
 
   function onSignOut() {
     showAlertModal("Sign Out", "Sign out clicked.");
@@ -277,23 +347,40 @@ function Dashboard() {
     const displayDate = formatInputDateToDisplay(docForm.date);
 
     const newDocument = {
-      id: generateDocId(),
-      title: docForm.applicationName,
-      origin: docForm.originDepartment,
-      current: docForm.originDepartment,
-      status: "Incoming",
-      assign: "Unassigned",
-      received: displayDate,
-      updated: displayDate,
-      days: 0,
-      due: displayDate,
-      priority: docForm.priorityLevel,
-      documentType: docForm.documentType,
-      files: uploadedFiles.map((file) => ({
-        name: file.name,
-        size: file.size,
-      })),
-    };
+  id: generateDocId(),
+  title: docForm.applicationName,
+  origin: docForm.originDepartment,
+  current: docForm.originDepartment,
+  status: "Incoming",
+  assign: "Unassigned",
+  received: displayDate,
+  updated: displayDate,
+  days: 0,
+  due: displayDate,
+  priority: docForm.priorityLevel,
+  documentType: docForm.documentType,
+  files: uploadedFiles.map((file) => ({
+    name: file.name,
+    size: file.size,
+  })),
+  history: [
+    {
+      label: "Submitted by Applicant",
+      date: displayDate,
+      type: "ok",
+    },
+    {
+      label: `Sent to ${docForm.originDepartment}`,
+      date: displayDate,
+      type: "ok",
+    },
+    {
+      label: "Document received by the system",
+      date: displayDate,
+      type: "ok",
+    },
+  ],
+};
 
     addDocument(newDocument);
 
@@ -525,7 +612,14 @@ function Dashboard() {
               <tbody>
                 {filteredDocuments.length > 0 ? (
                   filteredDocuments.map((d) => (
-                    <tr key={d.id}>
+                    <tr
+                    key={d.id}
+                    onClick={() => setSelectedDocId(d.id)}
+                    style={{
+                      cursor: "pointer",
+                      background: selectedDocId === d.id ? "#f4f8ff" : "transparent",
+                    }}
+                  >
                       <td>{d.id}</td>
                       <td>{d.title}</td>
                       <td>{d.origin}</td>
@@ -581,22 +675,31 @@ function Dashboard() {
             </div>
 
             <div className="card">
-              <div className="card-title center-title">Document History</div>
-
-              <div className="timeline">
-                {history.map((h, idx) => (
-                  <div key={idx} className="tl-row">
-                    <div className="tl-left">
-                      <span className={`tl-dot ${h.type}`} />
-                      {idx !== history.length - 1 && <span className="tl-line" />}
-                    </div>
-                    <div className={`tl-text ${h.type === "bad" ? "bad" : ""}`}>
-                      <span className="tl-label">{h.label}</span>
-                      <span className="tl-date"> - {h.date}</span>
-                    </div>
+              <div className="card-title center-title">
+                    Document History
+                    {selectedDocument ? ` - ${selectedDocument.title}` : ""}
                   </div>
-                ))}
-              </div>
+
+                <div className="timeline">
+                  {history.length > 0 ? (
+                    history.map((h, idx) => (
+                      <div key={idx} className="tl-row">
+                        <div className="tl-left">
+                          <span className={`tl-dot ${h.type}`} />
+                          {idx !== history.length - 1 && <span className="tl-line" />}
+                        </div>
+                        <div className={`tl-text ${h.type === "bad" ? "bad" : ""}`}>
+                          <span className="tl-label">{h.label}</span>
+                          <span className="tl-date"> - {h.date}</span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="center" style={{ padding: "20px" }}>
+                      No document history available.
+                    </div>
+                  )}
+                </div>
             </div>
 
             <div className="button-col">

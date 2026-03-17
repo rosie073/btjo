@@ -354,6 +354,7 @@ export default function Documents() {
               <Bell size={18} />
             </button>
 
+
             <ProfileMenu />
 
             <button className="docs-icon-btn" type="button" aria-label="Close">
@@ -578,6 +579,19 @@ export default function Documents() {
                   navigate("/tracking");
                   setNavOpen(false);
                 }}
+              >
+                <span className="nav-ico">
+                  <MapPinned size={16} strokeWidth={2.2} />
+                </span>
+                Tracking
+              </button>
+
+
+
+
+              <button
+                className={`nav-item ${isActive("/tracking") ? "active" : ""}`}
+                onClick={() => navigate("/tracking")}
               >
                 <span className="nav-ico">
                   <MapPinned size={16} strokeWidth={2.2} />
